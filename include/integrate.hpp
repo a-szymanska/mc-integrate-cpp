@@ -9,6 +9,7 @@ with Vegas optimization for improved convergence and Welford's algorithm for err
 #include <functional>
 #include <random>
 #include <cmath>
+#include <ctime>
 
 struct Result {
     double value;

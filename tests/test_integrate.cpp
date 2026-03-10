@@ -18,6 +18,7 @@ void test_integrate_trapezoid()
     assert(r.value == 0.0);
     assert(r.error == 0.0);
 }
+
 void test_integrate_MC()
 {
 
