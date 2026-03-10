@@ -1,0 +1,22 @@
+# build
+build/
+bin/
+out/
+
+# executables
+*.exe
+*.out
+
+# object files
+*.o
+*.obj
+
+# mac
+.DS_Store
+
+# vscode
+.vscode/
+
+# cmake
+CMakeFiles/
+CMakeCache.txt
