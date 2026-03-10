@@ -1,4 +1,5 @@
 #include "../include/integrate.hpp"
+#include "./utils.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -17,17 +18,14 @@ void test_integrate_trapezoid()
     assert(r.value == 0.0);
     assert(r.error == 0.0);
 }
-
 void test_integrate_MC()
 {
-    // TODO
 
     auto f = [](double x) { return x; };
 
     Result r = integrate_MC(0.0, 1.0, f, 1000, 10, 5);
 
-    assert(r.value == 0.0);
-    assert(r.error == 0.0);
+    assert(approx_equal(r.value, 0.5, r.error));
 }
 
 void test_integrate_MC_ndim()
