@@ -62,10 +62,10 @@ void test_integrate_MC_dist()
 
 int main()
 {
-    test_integrate_trapezoid, "test_integrate_trapezoid";
-    test_integrate_MC, "test_integrate_MC";
-    test_integrate_MC_ndim, "test_integrate_MC_ndim";
-    test_integrate_MC_dist, "test_integrate_MC_dist";
+    test_integrate_trapezoid();
+    test_integrate_MC();
+    test_integrate_MC_ndim();
+    test_integrate_MC_dist();
 
     std::cout << "\nAll tests passed.\n";
 }
