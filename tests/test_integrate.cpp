@@ -9,23 +9,18 @@
 
 void test_integrate_trapezoid()
 {
-    // TODO
+    auto f = [](double x)
+    { return x; };
 
-    auto f = [](double x) { return x * x; };
-
-    Result r = integrate_trapezoid(0.0, 1.0, f, 100);
-
-    assert(r.value == 0.0);
-    assert(r.error == 0.0);
+    Result r = integrate_trapezoid(0.0, 1.0, f, 10000, 5);
+    assert(approx_equal(r.value, 0.5, r.error));
 }
 
 void test_integrate_MC()
 {
-
     auto f = [](double x) { return x; };
 
     Result r = integrate_MC(0.0, 1.0, f, 1000, 10, 5);
-
     assert(approx_equal(r.value, 0.5, r.error));
 }
 
@@ -65,6 +60,4 @@ int main()
     test_integrate_MC();
     test_integrate_MC_ndim();
     test_integrate_MC_dist();
-
-    std::cout << "\nAll tests passed.\n";
 }
