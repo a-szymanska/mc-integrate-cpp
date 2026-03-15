@@ -17,4 +17,6 @@ jobs:
           make
 
       - name: Run test
-        run: ./test
+        run: |
+          cd build
+          ctest --output-on-failure
