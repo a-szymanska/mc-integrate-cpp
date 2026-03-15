@@ -9,8 +9,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build test
-        run: g++ -std=c++17 tests/test_integrate.cpp -o test
+      - name: Build library and tests
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          make
 
       - name: Run test
         run: ./test
