@@ -17,18 +17,19 @@ void test_integrate_MC()
 
 void test_integrate_MC_ndim()
 {
-    // TODO
-
-    std::vector<double> lower = {0.0, 0.0};
-    std::vector<double> upper = {1.0, 1.0};
+    std::vector<double> lower(5, 0);
+    std::vector<double> upper(5, M_PI);
 
     auto f = [](const std::vector<double> &x)
-        { return x[0] + x[1]; };
+        { 
+          double res = 1;
+          for(double cur: x){ res*=std::sin(cur);}
+          return res;
+        };
 
-    Result r = integrate_MC_ndim(lower, upper, f, 1000);
+    Result r = integrate_MC_ndim(lower, upper, f, 100000);
 
-    assert(r.value == 0.0);
-    assert(r.error == 0.0);
+    assert(approx_equal(r.value, 32, r.error));
 }
 
 void test_integrate_MC_dist()

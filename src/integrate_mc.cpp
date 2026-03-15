@@ -77,8 +77,40 @@ Result integrate_MC_ndim(
     const std::function<double(const std::vector<double> &)> &f,
     int n_points)
 {
-    // TODO
-    return {0.0, 0.0};
+    int dim = lower.size();
+
+    std::mt19937 mt(time(nullptr));
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+    double sum = 0;
+    double mean = 0;
+    double m2 = 0;
+
+    double range = 1;
+
+    for(int i = 0; i < dim; i++){
+      range *= (upper[i]-lower[i]);
+    }
+
+    std::vector<double> input(dim); 
+  
+    for (int i = 1; i <= n_points; i++) {
+        for(int j = 0; j < dim; j++){
+          input[j] = lower[j] + (upper[j] - lower[j]) * dist(mt);
+        }
+
+        double y = f(input);
+        sum += y;
+
+        // Welford's variance
+        double old_mean = mean;
+        mean += (y-mean) / i;
+        m2 += (y-old_mean) * (y-mean);
+    }
+    double variance = m2  / (n_points - 1);
+    double error = range * std::sqrt(variance / n_points);
+
+    return {sum * range/ n_points, error};
 }
 
 Result integrate_MC_dist(
