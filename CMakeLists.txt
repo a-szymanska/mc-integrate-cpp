@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 enable_testing()
 
-add_library(integrate src/integrate.cpp)
+add_library(integrate src/integrate_mc.cpp src/integrate_quadrature.cpp)
 target_include_directories(integrate PUBLIC include)
 
 # Tests

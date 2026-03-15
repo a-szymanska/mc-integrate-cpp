@@ -1,4 +1,4 @@
-#include "../include/integrate.hpp"
+#include "../include/integrate_mc.hpp"
 #include "./utils.hpp"
 
 #include <cassert>

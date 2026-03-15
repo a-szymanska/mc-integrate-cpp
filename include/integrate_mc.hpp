@@ -1,22 +1,26 @@
 /*
-Implementation of Monte Carlo and trapezoidal methods for numerical integration,
-with Vegas optimization for improved convergence and Welford's algorithm for error estimation.
+Implementation of Monte Carlo methods for numerical integration,
+with Vegas optimization and Welford's algorithm for error estimation.
 */
 
 #pragma once
 
 #include <vector>
 #include <functional>
-#include <random>
-#include <cmath>
-#include <ctime>
-
-constexpr double kTolerance = 1e-6;
 
 struct Result {
     double value;
     double error;
 };
+
+/*
+The total number of sampled points is equal to n_points * n_iterations.
+*/
+
+/*
+The returned error estimates the standard deviation of the integral estimate
+based on the sample variance of the function in each bin.
+*/
 
 // ----- Monte Carlo integration (1-dimensional) -----
 
@@ -44,23 +48,5 @@ Result integrate_MC_dist(
     const std::function<double(double)> &f,
     const std::function<double(double)> &p,
     int n_points,
-    int n_boxes,
-    int n_iterations);
-
-// -------------- Trapezoid integration --------------
-
-Result integrate_trapezoid(
-    double lower,
-    double upper,
-    const std::function<double(double)> &f,
-    int n_boxes,
-    int n_iterations);
-    
-// -------------- Simpson's integration --------------
-
-Result integrate_simpson(
-    double lower,
-    double upper,
-    const std::function<double(double)> &f,
     int n_boxes,
     int n_iterations);
