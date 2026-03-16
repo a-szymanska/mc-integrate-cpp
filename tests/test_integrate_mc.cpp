@@ -39,7 +39,7 @@ void test_integrate_MC_dist()
     auto f = [](double x) { return x; };
     auto p = [](double x) { return 1.0; };
 
-    Result r = integrate_MC_dist(0.0, 1.0, f, p, 1000, 10, 5);
+    Result r = integrate_MC_dist(0.0, 1.0, f, p, 10000, 10, 10);
 
     assert(r.value == 0.0);
     assert(r.error == 0.0);
