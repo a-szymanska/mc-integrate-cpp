@@ -3,9 +3,7 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
 #include <vector>
-#include <string>
 
 void test_integrate_MC()
 {
