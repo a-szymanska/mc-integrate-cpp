@@ -31,6 +31,15 @@ The returned error estimates the standard deviation of the integral estimate
 based on the variation of the function values within each bin.
 */
 
+Result integrate_quadrature(
+    double lower,
+    double upper,
+    const std::function<double(double)> &f,
+    const std::function<double(double, double, double, double)> &rule,
+    int n_boxes,
+    int n_iterations);
+
+
 // -------------- Trapezoid integration --------------
 
 Result integrate_trapezoid(
