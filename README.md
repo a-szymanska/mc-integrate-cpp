@@ -31,7 +31,7 @@ To bundle the library into a single header:
 ```bash
 ./amalgamate.sh
 ```
-To use the library in your own project download the generated all-in-one header in `dist/integrate.hpp`.
+To use the library in your own project download the generated all-in-one header in `mc_integrate_cpp.hpp`.
 
 ### Examples
 
