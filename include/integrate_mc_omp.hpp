@@ -5,12 +5,9 @@ with Vegas optimization and Welford's algorithm for error estimation.
 
 #pragma once
 
-#include <functional>
+#include "common.hpp"
 
-struct Result {
-    double value;
-    double error;
-};
+#include <functional>
 
 /*
 The total number of sampled points is equal to n_points * n_iterations.

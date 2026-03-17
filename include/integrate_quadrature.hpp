@@ -4,15 +4,11 @@ The quadrature methods for numerical integration with adaptive partition into bo
 
 #pragma once
 
+#include "common.hpp"
+
 #include <functional>
 
 constexpr double kBoxTolerance = 1e-6;
-
-struct Result
-{
-    double value;
-    double error;
-};
 
 struct Box
 {
