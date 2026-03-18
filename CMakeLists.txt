@@ -18,7 +18,7 @@ target_include_directories(integrate PUBLIC include)
 add_library(sample src/sample.cpp)
 target_include_directories(sample PUBLIC include)
 
-target_link_libraries(integrate PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(integrate PUBLIC OpenMP::OpenMP_CXX sample)
 
 # Tests
 enable_testing()
