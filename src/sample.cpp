@@ -4,68 +4,49 @@ Implementation of the sampling algorithms for importance Monte Carlo methods.
 
 #include "../include/sample.hpp"
 
-#include <random>
+// ------------ Metropolis-Hastings (MCMC) -----------
 
-double sample_mcmc(
-    double lower,
-    double upper,
-    const std::function<double(double)> &p,
-    int n_iterations)
+std::mt19937 McmcSampler::mt(std::random_device{}());
+std::uniform_real_distribution<double> McmcSampler::dist_bool(0.0, 1.0);
+
+double McmcSampler::sample_continuous()
 {
-    static std::mt19937 mt(std::random_device{}());
     std::uniform_real_distribution<double> dist(lower, upper);
-    std::uniform_real_distribution<double> dist_bool(0.0, 1.0);
 
-    double q = dist(mt);
+    int n_iterations = kIterationsStep;
+    if (cur_state == 0.0) {  // First sample
+        cur_state = dist(mt);
+        n_iterations = kIterationsInit;
+    }
+
     while (n_iterations--) {
-        double q_next = dist(mt);
-        double p_accept = std::min(1.0, p(q_next) / p(q));
+        double next_state = dist(mt);
+        double p_accept = std::min(1.0, pdf(next_state) / pdf(cur_state));
         if (dist_bool(mt) <= p_accept) {
-            q = q_next;
+            cur_state = next_state;
         }
     }
 
-    return q;
+    return cur_state;
 }
 
-double sample_mcmc(
-    const std::vector<double> &values,
-    const std::vector<double> &probs,
-    int n_iterations)
+double McmcSampler::sample_discrete()
 {
-    std::mt19937 mt(std::random_device{}());
     std::uniform_int_distribution<int> dist(0, values.size() - 1);
-    std::uniform_real_distribution<double> dist_bool(0.0, 1.0);
+    
+    int n_iterations = 1;
+    if (cur_idx == 0.0) {  // First sample
+        cur_idx = dist(mt);
+        n_iterations = 100;
+    }
 
-    int q = dist(mt);
     while (n_iterations--) {
-        int q_next = dist(mt);
-        double p_accept = std::min(1.0, probs[q_next] / probs[q]);
+        int next_idx = dist(mt);
+        double p_accept = std::min(1.0, probs[next_idx] / probs[cur_idx]);
         if (dist_bool(mt) <= p_accept) {
-            q = q_next;
+            cur_idx = next_idx;
         }
     }
-
-    return values[q];
+    
+    return values[cur_idx];
 }
-
-std::mt19937 mcmc_sampler::mt{std::random_device{}()};
-
-mcmc_sampler::mcmc_sampler(std::vector<int> &new_values, std::vector<double> &new_probs)
-        : values(new_values), 
-          probs(new_probs), 
-          dist(0, static_cast<int>(new_values.size()) - 1),
-          dist_bool(0.0, 1.0) 
-    {
-      cur_state = dist(mt);
-    }
-
-long mcmc_sampler::operator()() {
-        int next = dist(mt);
-        double p_accept = std::min(1.0, probs[next] / probs[cur_state]);
-        if (dist_bool(mt) <= p_accept) {
-            cur_state = next;
-        }
-      
-        return values[cur_state];
-    }

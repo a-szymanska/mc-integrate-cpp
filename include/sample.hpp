@@ -10,41 +10,57 @@ The sampling algorithms for importance Monte Carlo methods.
 
 // ------------ Metropolis-Hastings (MCMC) -----------
 
-/**
- * Draws a sample from a continuous distribution defined by
- * a probability density function f over the interval [lower, upper].
- */
-double sample_mcmc(
-    double lower,
-    double upper,
-    const std::function<double(double)> &p,
-    int n_iterations = 1000);
+class McmcSampler
+{
+public:
+    // Continuous distribution constructor
+    McmcSampler(
+        double lower,
+        double upper,
+        std::function<double(double)> pdf)
+        : lower(lower),
+          upper(upper),
+          pdf(std::move(pdf)),
+          sample(&McmcSampler::sample_continuous)
+    {}
 
-/**
- * Draws a sample from a discrete distribution defined by
- * a set of probabilities corresponding to discrete values in the domain.
- * 
- * The input distribution is represented as vector of values and a vector
- * of corresponding probabilities.
- */
-double sample_mcmc(
-    const std::vector<double> &values,
-    const std::vector<double> &probs,
-    int n_iterations = 1000);
+    // Discrete distribution constructor
+    McmcSampler(
+        std::vector<double> values,
+        std::vector<double> probs)
+        : values(std::move(values)),
+          probs(std::move(probs)),
+          sample(&McmcSampler::sample_discrete)
+    {}
 
-/**
- * Continous mcmc sampler allowing to draw points from a given distribution online
-*/
-class mcmc_sampler{
-    std::vector<int> &values;
-    std::vector<double> &probs;
-    static std::mt19937 mt; 
-    std::uniform_int_distribution<int> dist;
-    std::uniform_real_distribution<double> dist_bool;
+    double operator()()
+    {
+        return (this->*sample)();
+    }
 
-    int cur_state;
+private:
+    using sample_fn = double (McmcSampler::*)();
+    sample_fn sample;
 
-    public:
-    mcmc_sampler(std::vector<int> &new_values, std::vector<double> &new_probs);
-    long operator()();
+    static std::mt19937 mt;
+    static std::uniform_real_distribution<double> dist_bool;
+
+    constexpr static int kIterationsInit = 1000;
+    constexpr static int kIterationsStep = 10;
+
+    // ----------- Continuous case -----------
+
+    double lower = 0.0;
+    double upper = 0.0;
+    std::function<double(double)> pdf;
+    double cur_state = 0.0;
+
+    // ----------- Discrete case -----------
+
+    std::vector<double> values;
+    std::vector<double> probs;
+    int cur_idx = 0;
+
+    double sample_continuous();
+    double sample_discrete();
 };

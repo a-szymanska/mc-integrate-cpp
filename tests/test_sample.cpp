@@ -8,13 +8,15 @@
 void test_sample_continuous()
 {
     // An inverse parabola centered at 0.
-    auto f = [](double x)
+    auto pdf = [](double x)
         { return 3/4 * (1 - x*x); };
 
     int n_samples = 1000;
     double sum = 0.0;
+
+    McmcSampler sample(-1.0, 1.0, pdf);
     for (int i = 0; i < n_samples; i++) {
-        double x = sample_mcmc(-1.0, 1.0, f, 100);
+        double x = sample();
         sum += x;
     }
 
@@ -31,11 +33,12 @@ void test_sample_discrete()
 
     int n_samples = 1000;
     double sum = 0.0;
+
+    McmcSampler sample(values, probs);
     for (int i = 0; i < n_samples; i++) {
-        double x = sample_mcmc(values, probs, 100);
+        double x = sample();
         sum += x;
     }
-
 
     double sample_mean = sum / n_samples;
     double expected_mean = 3.0;

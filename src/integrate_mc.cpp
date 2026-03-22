@@ -4,18 +4,19 @@ Implementation of the Monte Carlo methods with Vegas optimization.
 
 #include "../include/integrate_mc.hpp"
 #include "../include/sample.hpp"
+
 #include <random>
 #include <cmath>
 #include <ctime>
 #include <vector>
-#include<iostream>
+#include <iostream>
 
 Result integrate_MC(
     double lower,
     double upper,
     const std::function<double(double)> &f,
     int n_points,
-    int n_boxes,
+    int n_bins,
     int n_iterations)
 {
     struct Box {
@@ -24,17 +25,17 @@ Result integrate_MC(
         double u;
         double cur_integral;
     };
-    std::vector<Box> bins(n_boxes);
+    std::vector<Box> bins(n_bins);
     
-    double bin_size = (upper-lower) / n_boxes;
+    double bin_size = (upper-lower) / n_bins;
     
     std::mt19937 mt(time(nullptr));
     std::uniform_real_distribution<double> dist(0, bin_size);
     
     double l = lower;
-    for (int i = 0; i < n_boxes; i++, l += bin_size) {
+    for (int i = 0; i < n_bins; i++, l += bin_size) {
         double u = std::min(upper, l + bin_size);
-        bins[i] = {n_points / n_boxes, l, u};
+        bins[i] = {n_points / n_bins, l, u};
     }
 
     double error_sum = 0;
@@ -87,23 +88,23 @@ Result integrate_MC_ndim(
     std::uniform_int_distribution<int> bin_dist(0, n_bins - 1);
 
     std::vector<std::vector<double>> bin_distributions;
-    std::vector<mcmc_sampler> bin_samplers;
+    std::vector<McmcSampler> bin_samplers;
 
     std::vector<double> bin_sizes(dim);
 
-    std::vector<int> sampler_values(n_bins);
-    for(int i=0; i<n_bins; i++){
-      sampler_values[i]=i;
+    std::vector<double> sampler_values(n_bins);
+    for (int i = 0; i < n_bins; i++) {
+      sampler_values[i] = i;
     }
 
-    for(int i=0; i<dim; i++){
+    for(int i = 0; i < dim; i++) {
       // initialize to 1 so no box will have 0 probability
       bin_distributions.emplace_back(n_bins, 1.0);
     }
 
     double range = 1.0;
 
-    for(int i = 0; i < dim; i++){
+    for(int i = 0; i < dim; i++) {
       bin_samplers.emplace_back(sampler_values, bin_distributions[i]);
       bin_sizes[i] = (upper[i] - lower[i]) / n_bins;
       range *= (upper[i] - lower[i]);
@@ -150,10 +151,9 @@ Result integrate_MC_ndim(
 
         // Welford's variance
         double old_mean = mean;
-        mean += (y-mean) / i;
-        m2 += (y-old_mean) * (y-mean);
+        mean += (y - mean) / i;
+        m2 += (y - old_mean) * (y - mean);
     }
-
     double variance = m2  / (n_points - 1);
     double error = range * std::sqrt(variance / n_points);
 
@@ -164,15 +164,17 @@ Result integrate_MC_dist(
     double lower,
     double upper,
     const std::function<double(double)> &f,
-    const std::function<double(double)> &p,
+    const std::function<double(double)> &pdf,
     int n_points)
 {
+    McmcSampler sample(lower, upper, pdf);
+    std::cout << "Sampler constructed" << std::endl;
     double mean = 0;
     double m2 = 0;
     for (int i = 1; i <= n_points; i++) {
-        double x = sample_mcmc(lower, upper, p, 100);
+        double x = sample();
         std::cout << x << std::endl;
-        double y = f(x) / std::max(p(x), 1e-15); // Avoid division by zero
+        double y = f(x) / std::max(pdf(x), 1e-15); // Avoid division by zero
 
         double old_mean = mean;
         mean += (y - mean) / i;

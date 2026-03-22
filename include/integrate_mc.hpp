@@ -27,7 +27,7 @@ Result integrate_MC(
     double upper,
     const std::function<double(double)> &f,
     int n_points,
-    int n_boxes,
+    int n_bins,
     int n_iterations);
 
 // ----- Monte Carlo integration (N-dimensional) -----
@@ -45,5 +45,5 @@ Result integrate_MC_dist(
     double lower,
     double upper,
     const std::function<double(double)> &f,
-    const std::function<double(double)> &p,
+    const std::function<double(double)> &pdf,
     int n_points);
