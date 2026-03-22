@@ -17,7 +17,7 @@ The sampling algorithms for importance Monte Carlo methods.
 double sample_mcmc(
     double lower,
     double upper,
-    const std::function<double(double)> &f,
+    const std::function<double(double)> &p,
     int n_iterations = 1000);
 
 /**
@@ -35,7 +35,6 @@ double sample_mcmc(
 /**
  * Continous mcmc sampler allowing to draw points from a given distribution online
 */
-
 class mcmc_sampler{
     std::vector<int> &values;
     std::vector<double> &probs;

@@ -46,6 +46,4 @@ Result integrate_MC_dist(
     double upper,
     const std::function<double(double)> &f,
     const std::function<double(double)> &p,
-    int n_points,
-    int n_boxes,
-    int n_iterations);
+    int n_points);

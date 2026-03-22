@@ -8,6 +8,7 @@ Implementation of the Monte Carlo methods with Vegas optimization.
 #include <cmath>
 #include <ctime>
 #include <vector>
+#include<iostream>
 
 Result integrate_MC(
     double lower,
@@ -55,8 +56,8 @@ Result integrate_MC(
 
                 // Welford's variance
                 double old_mean = mean;
-                mean += (y-mean) / k;
-                m2 += (y-old_mean) * (y-mean);
+                mean += (y - mean) / k;
+                m2 += (y - old_mean) * (y - mean);
             }
             bin.cur_integral = bin_size * sum / points;
             int_sum += bin.cur_integral;
@@ -104,8 +105,8 @@ Result integrate_MC_ndim(
 
     for(int i = 0; i < dim; i++){
       bin_samplers.emplace_back(sampler_values, bin_distributions[i]);
-      bin_sizes[i]=(upper[i]-lower[i])/n_bins;
-      range *= (upper[i]-lower[i]);
+      bin_sizes[i] = (upper[i] - lower[i]) / n_bins;
+      range *= (upper[i] - lower[i]);
     }
 
     std::vector<double> input(dim); 
@@ -117,33 +118,33 @@ Result integrate_MC_ndim(
     double mean = 0.0;
     double m2 = 0.0;
 
-    int burn_in_size = std::min(n_bins*100, n_points);
+    int burn_in_size = std::min(n_bins * 100, n_points);
     for (int i = 1; i <= n_points; i++) {
         double pdf = 1.0;
-        if(i>burn_in_size){
-          for(int j = 0; j < dim; j++){
+        if (i > burn_in_size) {
+          for (int j = 0; j < dim; j++) {
             int bin = bin_samplers[j]();
-            chosen_bin[j]=bin;
-            input[j] = lower[j] + bin_sizes[j]*(bin + dist(mt));
+            chosen_bin[j] = bin;
+            input[j] = lower[j] + bin_sizes[j] * (bin + dist(mt));
 
-            pdf*= (double)n_bins * bin_distributions[j][bin]/ (unweighted_sum);
+            pdf *= (double)n_bins * bin_distributions[j][bin] / (unweighted_sum);
           }
         }
         else{
-          for(int j = 0; j < dim; j++){
+          for(int j = 0; j < dim; j++) {
             int bin = bin_dist(mt);
-            chosen_bin[j]=bin;
-            input[j] = lower[j] + bin_sizes[j]*(bin + dist(mt));
+            chosen_bin[j] = bin;
+            input[j] = lower[j] + bin_sizes[j] * (bin + dist(mt));
           }
         }
 
-        double y = f(input)/pdf;
+        double y = f(input) / pdf;
         sum += y;
 
-        if(i<=burn_in_size){
-          unweighted_sum+=y; 
-          for(int j=0; j<dim; j++){
-            bin_distributions[j][chosen_bin[j]]+=y;
+        if (i <= burn_in_size) {
+          unweighted_sum += y; 
+          for(int j = 0; j < dim; j++) {
+            bin_distributions[j][chosen_bin[j]] += y;
           }
         }
 
@@ -156,7 +157,7 @@ Result integrate_MC_ndim(
     double variance = m2  / (n_points - 1);
     double error = range * std::sqrt(variance / n_points);
 
-    return {sum * range/ n_points, error};
+    return {sum * range / n_points, error};
 }
 
 Result integrate_MC_dist(
@@ -164,10 +165,21 @@ Result integrate_MC_dist(
     double upper,
     const std::function<double(double)> &f,
     const std::function<double(double)> &p,
-    int n_points,
-    int n_boxes,
-    int n_iterations)
+    int n_points)
 {
-    // TODO
-    return {0.0, 0.0};
+    double mean = 0;
+    double m2 = 0;
+    for (int i = 1; i <= n_points; i++) {
+        double x = sample_mcmc(lower, upper, p, 100);
+        std::cout << x << std::endl;
+        double y = f(x) / std::max(p(x), 1e-15); // Avoid division by zero
+
+        double old_mean = mean;
+        mean += (y - mean) / i;
+        m2 += (y - old_mean) * (y - mean);
+    }
+
+    double var = m2 / (n_points - 1);
+    double error = std::sqrt(var / n_points);
+    return {mean, error};
 }

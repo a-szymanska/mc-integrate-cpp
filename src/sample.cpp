@@ -9,7 +9,7 @@ Implementation of the sampling algorithms for importance Monte Carlo methods.
 double sample_mcmc(
     double lower,
     double upper,
-    const std::function<double(double)> &f,
+    const std::function<double(double)> &p,
     int n_iterations)
 {
     static std::mt19937 mt(std::random_device{}());
@@ -19,7 +19,7 @@ double sample_mcmc(
     double q = dist(mt);
     while (n_iterations--) {
         double q_next = dist(mt);
-        double p_accept = std::min(1.0, f(q_next) / f(q));
+        double p_accept = std::min(1.0, p(q_next) / p(q));
         if (dist_bool(mt) <= p_accept) {
             q = q_next;
         }

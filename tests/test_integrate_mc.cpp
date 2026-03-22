@@ -18,31 +18,26 @@ void test_integrate_MC_ndim()
     std::vector<double> lower(5, 0);
     std::vector<double> upper(5, M_PI);
 
-    auto f = [](const std::vector<double> &x)
-        { 
-          double res = 1;
-          for(double cur: x){ res*=std::sin(cur);}
-          return res;
-        };
+    auto f = [](const std::vector<double> &X) { 
+        double res = 1;
+        for (double val: X) {
+            res *= std::sin(val);
+        }
+        return res;
+    };
 
     Result r = integrate_MC_ndim(lower, upper, f, 10, 100000);
-
     assert(approx_equal(r.value, 32, r.error));
 }
 
 void test_integrate_MC_dist()
 {
-    // TODO
+    auto f = [](double x) { return std::sin(x); };
+    auto p = [](double x) { return 8 * x / (M_PI * M_PI); }; // Linear PDF normalized over [0, pi/2]
 
-    auto f = [](double x) { return x; };
-    auto p = [](double x) { return 1.0; };
-
-    Result r = integrate_MC_dist(0.0, 1.0, f, p, 10000, 10, 10);
-
-    assert(r.value == 0.0);
-    assert(r.error == 0.0);
+    Result r = integrate_MC_dist(0.0, M_PI/2, f, p, 10000);
+    assert(approx_equal(r.value, 1.0, r.error));
 }
-
 
 int main()
 {
