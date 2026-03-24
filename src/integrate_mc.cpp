@@ -167,14 +167,19 @@ Result integrate_MC_dist(
     const std::function<double(double)> &pdf,
     int n_points)
 {
-    McmcSampler sample(lower, upper, pdf);
-    std::cout << "Sampler constructed" << std::endl;
+    McmcSampler sampler(lower, upper, pdf);
+
+    std::vector<double> f_values;
+    f_values.reserve(n_points);
+
     double mean = 0;
     double m2 = 0;
+
     for (int i = 1; i <= n_points; i++) {
-        double x = sample();
-        std::cout << x << std::endl;
-        double y = f(x) / std::max(pdf(x), 1e-15); // Avoid division by zero
+        double x = sampler();
+        double y = f(x) / pdf(x);
+
+        f_values.push_back(y);
 
         double old_mean = mean;
         mean += (y - mean) / i;
@@ -182,6 +187,25 @@ Result integrate_MC_dist(
     }
 
     double var = m2 / (n_points - 1);
-    double error = std::sqrt(var / n_points);
+
+    // Computing autocorrelation time
+    int max_lag = std::min(1000, n_points / 2);
+    double tau_int = 1.0;
+
+    for (int t = 1; t < max_lag; t++) {
+        double autocov = 0.0;
+        for (int i = 0; i < n_points - t; i++) {
+            autocov += (f_values[i] - mean) * (f_values[i + t] - mean);
+        }
+        autocov /= (n_points - t);
+        if (autocov <= 0) { // Gets too noisy, so stop here
+            break;
+        }
+
+        tau_int += 2.0 * autocov / var;
+    }
+
+    double error = std::sqrt(var * tau_int / n_points);
+
     return {mean, error};
 }
