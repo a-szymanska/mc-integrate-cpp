@@ -1,4 +1,4 @@
-#include "../include/sample.hpp"
+#include "../include/sample_mcmc.hpp"
 #include "./utils.hpp"
 
 #include <cassert>
@@ -14,9 +14,9 @@ void test_sample_continuous()
     int n_samples = 1000;
     double sum = 0.0;
 
-    McmcSampler sample(-1.0, 1.0, pdf);
+    McmcSampler<> sampler(-1.0, 1.0, pdf);
     for (int i = 0; i < n_samples; i++) {
-        double x = sample();
+        auto x = sampler();
         sum += x;
     }
 
@@ -28,15 +28,15 @@ void test_sample_continuous()
 
 void test_sample_discrete()
 {
-    std::vector<double> values = {1.0, 2.0, 3.0, 4.0};
+    std::vector<int> values = {1, 2, 3, 4};
     std::vector<double> probs = {0.1, 0.2, 0.3, 0.4};
 
     int n_samples = 1000;
     double sum = 0.0;
 
-    McmcSampler sample(values, probs);
+    McmcSampler<int> sampler(values, probs);
     for (int i = 0; i < n_samples; i++) {
-        double x = sample();
+        auto x = sampler();
         sum += x;
     }
 

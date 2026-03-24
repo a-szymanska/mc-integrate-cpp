@@ -3,7 +3,7 @@ Implementation of the Monte Carlo methods with Vegas optimization.
 */
 
 #include "../include/integrate_mc.hpp"
-#include "../include/sample.hpp"
+#include "../include/sample_mcmc.hpp"
 
 #include <random>
 #include <cmath>
@@ -88,11 +88,11 @@ Result integrate_MC_ndim(
     std::uniform_int_distribution<int> bin_dist(0, n_bins - 1);
 
     std::vector<std::vector<double>> bin_distributions;
-    std::vector<McmcSampler> bin_samplers;
+    std::vector<McmcSampler<int>> bin_samplers;
 
     std::vector<double> bin_sizes(dim);
 
-    std::vector<double> sampler_values(n_bins);
+    std::vector<int> sampler_values(n_bins);
     for (int i = 0; i < n_bins; i++) {
       sampler_values[i] = i;
     }
@@ -167,7 +167,7 @@ Result integrate_MC_dist(
     const std::function<double(double)> &pdf,
     int n_points)
 {
-    McmcSampler sampler(lower, upper, pdf);
+    McmcSampler<> sampler(lower, upper, pdf);
 
     std::vector<double> f_values;
     f_values.reserve(n_points);

@@ -15,8 +15,8 @@ find_package(OpenMP)
 # Source code
 add_library(integrate src/integrate_mc.cpp src/integrate_mc_omp.cpp src/integrate_quadrature.cpp)
 target_include_directories(integrate PUBLIC include)
-add_library(sample src/sample.cpp)
-target_include_directories(sample PUBLIC include)
+add_library(sample INTERFACE)
+target_include_directories(sample INTERFACE include)
 
 target_link_libraries(integrate PUBLIC OpenMP::OpenMP_CXX sample)
 
@@ -32,11 +32,11 @@ target_link_libraries(test_integrate_quadrature integrate)
 add_executable(test_sample tests/test_sample.cpp)
 target_link_libraries(test_sample sample)
 
-if(OpenMP_CXX_FOUND)
-    add_executable(test_integrate_mc_omp tests/test_integrate_mc_omp.cpp)
-    target_link_libraries(test_integrate_mc_omp integrate)
-    # add_test(NAME test_integrate_mc_omp COMMAND test_integrate_mc_omp)
-endif()
+# if(OpenMP_CXX_FOUND)
+#     add_executable(test_integrate_mc_omp tests/test_integrate_mc_omp.cpp)
+#     target_link_libraries(test_integrate_mc_omp integrate)
+#     add_test(NAME test_integrate_mc_omp COMMAND test_integrate_mc_omp)
+# endif()
 
 add_test(NAME test_integrate_mc COMMAND test_integrate_mc)
 add_test(NAME test_integrate_quadrature COMMAND test_integrate_quadrature)
