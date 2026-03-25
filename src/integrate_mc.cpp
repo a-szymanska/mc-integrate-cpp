@@ -9,7 +9,6 @@ Implementation of the Monte Carlo methods with Vegas optimization.
 #include <cmath>
 #include <ctime>
 #include <vector>
-#include <iostream>
 
 Result integrate_MC(
     double lower,
