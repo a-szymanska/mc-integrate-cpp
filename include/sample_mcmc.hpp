@@ -22,6 +22,7 @@ public:
         : lower(lower),
           upper(upper),
           pdf(std::move(pdf)),
+          dist_continuous(lower, upper),
           sample(&McmcSampler<T>::sample_continuous)
     {}
 
@@ -31,6 +32,7 @@ public:
         std::vector<double> probs)
         : values(std::move(values)),
           probs(std::move(probs)),
+          dist_discrete(0, values.size() - 1),
           sample(&McmcSampler<T>::sample_discrete)
     {}
 
@@ -46,8 +48,11 @@ private:
     static std::mt19937 mt;
     static std::uniform_real_distribution<double> dist_prob;
 
-    constexpr static int kIterationsInit = 1000;
-    constexpr static int kIterationsStep = 10;
+    std::uniform_int_distribution<int> dist_discrete;
+    std::uniform_real_distribution<double> dist_continuous;
+
+    constexpr static int kNumIterationsInit = 1000;
+    constexpr static int kNumIterationsStep = 1;
 
     // ----------- Continuous case -----------
 
@@ -66,6 +71,7 @@ private:
     T sample_discrete();
 };
 
+
 template <typename T>
 std::mt19937 McmcSampler<T>::mt(std::random_device{}());
 
@@ -75,16 +81,14 @@ std::uniform_real_distribution<double> McmcSampler<T>::dist_prob(0.0, 1.0);
 template <typename T>
 T McmcSampler<T>::sample_continuous()
 {
-    std::uniform_real_distribution<double> dist(lower, upper);
-
-    int n_iterations = kIterationsStep;
+    int n_iterations = kNumIterationsStep;
     if (cur_state == 0.0) {  // First sample
-        cur_state = dist(mt);
-        n_iterations = kIterationsInit;
+        cur_state = dist_continuous(mt);
+        n_iterations = kNumIterationsInit;
     }
 
     while (n_iterations--) {
-        double next_state = dist(mt);
+        double next_state = dist_continuous(mt);
         double p_accept = std::min(1.0, pdf(next_state) / pdf(cur_state));
         if (dist_prob(mt) <= p_accept) {
             cur_state = next_state;
@@ -97,16 +101,14 @@ T McmcSampler<T>::sample_continuous()
 template <typename T>
 T McmcSampler<T>::sample_discrete()
 {
-    std::uniform_int_distribution<int> dist(0, values.size() - 1);
-
-    int n_iterations = 1;
+    int n_iterations = kNumIterationsStep;
     if (cur_idx == 0.0) {  // First sample
-        cur_idx = dist(mt);
-        n_iterations = 100;
+        cur_idx = dist_discrete(mt);
+        n_iterations = kNumIterationsInit;
     }
 
     while (n_iterations--) {
-        int next_idx = dist(mt);
+        int next_idx = dist_discrete(mt);
         double p_accept = std::min(1.0, probs[next_idx] / probs[cur_idx]);
         if (dist_prob(mt) <= p_accept) {
             cur_idx = next_idx;
