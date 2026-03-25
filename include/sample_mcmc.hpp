@@ -7,6 +7,7 @@ The sampling algorithms for importance Monte Carlo methods.
 #include <random>
 #include <vector>
 #include <functional>
+#include <optional>
 #include <type_traits>
 
 // ------------ Metropolis-Hastings (MCMC) -----------
