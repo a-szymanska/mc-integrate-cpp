@@ -30,6 +30,23 @@ void test_integrate_MC_ndim()
     assert(approx_equal(r.value, 32, r.error));
 }
 
+void test_integrate_MC_highdim()
+{
+    std::vector<double> lower(20, 0);
+    std::vector<double> upper(20, M_PI);
+
+    auto f = [](const std::vector<double> &X) { 
+        double res = 1;
+        for (double val: X) {
+            res *= std::sin(val);
+        }
+        return res;
+    };
+
+    Result r = integrate_MC_highdim(lower, upper, f, 20, 200, 100000);
+    assert(approx_equal(r.value, pow(2.0,20.0), r.error));
+}
+
 void test_integrate_MC_dist()
 {
     auto f = [](double x) { return std::sin(x); };
@@ -43,5 +60,6 @@ int main()
 {
     test_integrate_MC();
     test_integrate_MC_ndim();
+    test_integrate_MC_highdim();
     test_integrate_MC_dist();
 }
