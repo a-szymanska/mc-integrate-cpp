@@ -26,7 +26,7 @@ void test_integrate_MC_ndim()
         return res;
     };
 
-    Result r = integrate_MC_ndim(lower, upper, f, 10, 100000);
+    Result r = integrate_MC_ndim(lower, upper, f, 10, 20, 100000);
     assert(approx_equal(r.value, 32, r.error));
 }
 

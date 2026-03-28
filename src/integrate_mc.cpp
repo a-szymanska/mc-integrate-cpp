@@ -21,9 +21,9 @@ Result integrate_MC(
     struct Box {
         long points;
         double l;
-        double u;
+double u;
         double cur_integral;
-    };
+   };
     std::vector<Box> bins(n_bins);
     
     double bin_size = (upper-lower) / n_bins;
@@ -37,7 +37,7 @@ Result integrate_MC(
         bins[i] = {n_points / n_bins, l, u};
     }
 
-    double error_sum = 0;
+    double error_sum = 0; 
     double result_sum = 0;
 
     for (int i = 0; i < n_iterations; i++) {
@@ -78,85 +78,102 @@ Result integrate_MC_ndim(
     const std::vector<double> &upper,
     const std::function<double(const std::vector<double> &)> &f,
     int n_bins,
+    int burn_in_size,
     int n_points)
 {
-    int dim = lower.size();
-   
-    std::mt19937 mt(time(nullptr));
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
-    std::uniform_int_distribution<int> bin_dist(0, n_bins - 1);
+  int n_dims = lower.size();
+  int n_areas = std::pow(n_bins, n_dims);
 
-    std::vector<std::vector<double>> bin_distributions;
-    std::vector<McmcSampler<int>> bin_samplers;
+  std::mt19937 mt(time(nullptr));
+  std::uniform_real_distribution<double> dist(0.0, 1.0);
+  std::vector<double> bin_sizes(n_dims);
 
-    std::vector<double> bin_sizes(dim);
+  double range = 1.0;
+  for(int i = 0; i < n_dims; i++) {
+    bin_sizes[i] = (upper[i] - lower[i]) / n_bins;
+    range *= (upper[i] - lower[i]);
+  }
+  range/=n_areas;
 
-    std::vector<int> sampler_values(n_bins);
-    for (int i = 0; i < n_bins; i++) {
-      sampler_values[i] = i;
+  std::vector<std::vector<int>> areas(n_areas);
+  std::vector<int> areas_indices(n_areas);
+
+  for (int i = 0; i < n_areas; i++) {
+    std::vector<int> combination(n_dims);
+    int temp = i;
+    for (int dim = n_dims - 1; dim >= 0; dim--)
+    {        
+      combination[dim] = temp % n_bins;
+      temp /= n_bins;
     }
+    areas[i] = combination;
+    areas_indices[i]=i;
+  }
 
-    for(int i = 0; i < dim; i++) {
-      // initialize to 1 so no box will have 0 probability
-      bin_distributions.emplace_back(n_bins, 1.0);
+  //generate bin_distribution, sample burn_in_size points from each area
+  std::vector<double> area_dist(n_areas, 0.0);
+  std::vector<double> input(n_dims);
+
+  double burn_in_sum=0;
+  for(int i=0; i<n_areas; i++){
+    for(int j=0; j<burn_in_size; j++){
+      for(int k =0; k<n_dims; k++){
+        input[k]= lower[k] + bin_sizes[k] * (areas[i][k] + dist(mt));
+      }
+      double y = abs(f(input));
+      area_dist[i]+=y;
     }
+    burn_in_sum+=area_dist[i];
+  }
 
-    double range = 1.0;
+  //normalise the distribution
+  for(int i=0; i<n_areas; i++){
+    area_dist[i]/=burn_in_sum;
+  }
 
-    for(int i = 0; i < dim; i++) {
-      bin_samplers.emplace_back(sampler_values, bin_distributions[i]);
-      bin_sizes[i] = (upper[i] - lower[i]) / n_bins;
-      range *= (upper[i] - lower[i]);
+  //use the estimated distribution to calculate the integral
+  std::vector<double> f_values;
+  f_values.reserve(n_points);
+  double mean = 0;
+  double m2 = 0;
+
+  McmcSampler area_sampler(areas_indices, area_dist);
+
+  for(int i=1; i<= n_points; i++){
+    int area = area_sampler();
+    for(int j =0; j<n_dims; j++){
+      input[j]= lower[j] + bin_sizes[j] * (areas[area][j] + dist(mt));
     }
+    double y = f(input)*range/area_dist[area]; 
+    f_values.push_back(y);
 
-    std::vector<double> input(dim); 
-     
-    std::vector<int> chosen_bin(dim, 0);
+    double old_mean = mean;
+    mean += (y - mean) / i;
+    m2 += (y - old_mean) * (y - mean);
+  }
+  
+  double var = m2 / (n_points - 1);
+ 
+  // Computing autocorrelation time
+  int max_lag = std::min(1000, n_points / 2);
+  double tau_int = 1.0;
 
-    double sum = 0.0;
-    double unweighted_sum = static_cast<double>(n_bins);
-    double mean = 0.0;
-    double m2 = 0.0;
+  for (int t = 1; t < max_lag; t++) {
+      double autocov = 0.0;
+      for (int i = 0; i < n_points - t; i++) {
+          autocov += (f_values[i] - mean) * (f_values[i + t] - mean);
+      }
+      autocov /= (n_points - t);
+      if (autocov <= 0) { // Gets too noisy, so stop here
+          break;
+      }
 
-    int burn_in_size = std::min(n_bins * 100, n_points);
-    for (int i = 1; i <= n_points; i++) {
-        double pdf = 1.0;
-        if (i > burn_in_size) {
-          for (int j = 0; j < dim; j++) {
-            int bin = bin_samplers[j]();
-            chosen_bin[j] = bin;
-            input[j] = lower[j] + bin_sizes[j] * (bin + dist(mt));
+      tau_int += 2.0 * autocov / var;
+  }
 
-            pdf *= (double)n_bins * bin_distributions[j][bin] / (unweighted_sum);
-          }
-        }
-        else{
-          for(int j = 0; j < dim; j++) {
-            int bin = bin_dist(mt);
-            chosen_bin[j] = bin;
-            input[j] = lower[j] + bin_sizes[j] * (bin + dist(mt));
-          }
-        }
+  double error = std::sqrt(var * tau_int / n_points);
 
-        double y = f(input) / pdf;
-        sum += y;
-
-        if (i <= burn_in_size) {
-          unweighted_sum += y; 
-          for(int j = 0; j < dim; j++) {
-            bin_distributions[j][chosen_bin[j]] += y;
-          }
-        }
-
-        // Welford's variance
-        double old_mean = mean;
-        mean += (y - mean) / i;
-        m2 += (y - old_mean) * (y - mean);
-    }
-    double variance = m2  / (n_points - 1);
-    double error = range * std::sqrt(variance / n_points);
-
-    return {sum * range / n_points, error};
+  return {mean, error};
 }
 
 Result integrate_MC_dist(

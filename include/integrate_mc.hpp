@@ -37,6 +37,7 @@ Result integrate_MC_ndim(
     const std::vector<double> &upper,
     const std::function<double(const std::vector<double> &)> &f,
     int n_bins,
+    int burn_in_size,
     int n_points);
 
 // ------ Monte Carlo with custom distribution ------
