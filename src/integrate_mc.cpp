@@ -5,6 +5,7 @@ Implementation of the Monte Carlo methods with Vegas optimization.
 #include "../include/integrate_mc.hpp"
 #include "../include/sample_mcmc.hpp"
 
+#include <cinttypes>
 #include <random>
 #include <cmath>
 #include <ctime>
@@ -174,6 +175,111 @@ Result integrate_MC_ndim(
   double error = std::sqrt(var * tau_int / n_points);
 
   return {mean, error};
+}
+
+Result integrate_MC_highdim(
+    const std::vector<double> &lower,
+    const std::vector<double> &upper,
+    const std::function<double(const std::vector<double> &)> &f,
+    int n_bins,
+    int burn_in_size,
+    int n_points)
+{
+    int n_dim = lower.size();
+    std::mt19937 mt(time(nullptr));
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    std::uniform_int_distribution<int> bin_dist(0, n_bins - 1);
+
+    std::vector<std::vector<double>> bin_distributions;
+    std::vector<McmcSampler<int>> bin_samplers;
+
+    std::vector<double> bin_sizes(n_dim);
+
+    std::vector<int> sampler_values(n_bins);
+    for (int i = 0; i < n_bins; i++) {
+      sampler_values[i] = i;
+    }
+
+    for(int i = 0; i < n_dim; i++) {
+      bin_distributions.emplace_back(n_bins, 0.0);
+    }
+
+    double range = 1.0;
+
+    for(int i = 0; i < n_dim; i++) {
+      bin_samplers.emplace_back(sampler_values, bin_distributions[i]);
+      bin_sizes[i] = (upper[i] - lower[i]) / n_bins;
+      range *= (upper[i] - lower[i]);
+    }
+    range/=std::pow(n_bins, n_dim);
+
+    std::vector<double> input(n_dim);
+
+    // estimate the distribution
+    for(int i=0; i<n_dim; i++){
+      double burn_in_sum = 0.0;
+      for(int j=0; j<n_bins; j++){
+        for(int k=0; k<burn_in_size; k++){
+          for(int l=0; l<n_dim; l++){
+            input[l] = lower[l] + bin_sizes[l]*n_bins * dist(mt);
+          }
+          input[i] = lower[i] + bin_sizes[i] * (j + dist(mt));
+
+          double y = abs(f(input));
+          bin_distributions[i][j]+=y;
+        }
+        burn_in_sum+=bin_distributions[i][j];
+      }
+
+      // normalise the distribution
+      for(int j=0; j<n_bins; j++){
+        bin_distributions[i][j]/=burn_in_sum;
+      }
+    }
+
+    //use the estimated distribution to calculate the integral
+    std::vector<double> f_values;
+    f_values.reserve(n_points);
+    double mean = 0;
+    double m2 = 0;
+
+    for(int i=1; i<= n_points; i++){
+      double pdf = 1.0;
+      for (int j = 0; j < n_dim; j++) {
+        int bin = bin_samplers[j]();
+        input[j] = lower[j] + bin_sizes[j] * (bin + dist(mt));
+        pdf *= bin_distributions[j][bin];
+      }
+
+      double y = f(input)*range/pdf; 
+      f_values.push_back(y);
+
+      double old_mean = mean;
+      mean += (y - mean) / i;
+      m2 += (y - old_mean) * (y - mean);
+    }
+    
+    double var = m2 / (n_points - 1);
+   
+    // Computing autocorrelation time
+    int max_lag = std::min(1000, n_points / 2);
+    double tau_int = 1.0;
+
+    for (int t = 1; t < max_lag; t++) {
+        double autocov = 0.0;
+        for (int i = 0; i < n_points - t; i++) {
+            autocov += (f_values[i] - mean) * (f_values[i + t] - mean);
+        }
+        autocov /= (n_points - t);
+        if (autocov <= 0) { // Gets too noisy, so stop here
+            break;
+        }
+
+        tau_int += 2.0 * autocov / var;
+    }
+
+    double error = std::sqrt(var * tau_int / n_points);
+    return {mean, error};
 }
 
 Result integrate_MC_dist(

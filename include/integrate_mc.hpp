@@ -40,6 +40,17 @@ Result integrate_MC_ndim(
     int burn_in_size,
     int n_points);
 
+
+// ----- Monte Carlo integration (N-dimensional) optimised for high dimension count -----
+
+Result integrate_MC_highdim(
+    const std::vector<double> &lower,
+    const std::vector<double> &upper,
+    const std::function<double(const std::vector<double> &)> &f,
+    int n_bins,
+    int burn_in_size,
+    int n_points);
+
 // ------ Monte Carlo with custom distribution ------
 
 Result integrate_MC_dist(

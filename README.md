@@ -7,6 +7,7 @@ Single-header C++ library for Monte Carlo (and not only) integration with suppor
 ### Monte Carlo methods
 - `integrate_MC` - integration in 1D with Vegas optimisation
 - `integrate_MC_ndim` - integration for multidimensional integrals
+- `integrate_MC_highdim` - integration for multidimensional integrals, optimised for large number of dimensions 
 - `integrate_MC_dist` - integration with importance sampling
 
 See [`include/integrate_mc.hpp`](include/integrate_mc.hpp).
