@@ -4,8 +4,7 @@ Implementation of the Monte Carlo methods with Vegas optimization.
 
 #include "../include/integrate_mc.hpp"
 #include "../include/sample_mcmc.hpp"
-
-#include <cinttypes>
+#include "../include/utils.hpp"
 #include <random>
 #include <cmath>
 #include <ctime>
@@ -322,19 +321,6 @@ Result integrate_MC_dist(
 
     double var = m2 / (n_points - 1);
 
-    // Computing autocorrelation time
-    double tau_int = 1.0;
-
-    for (int t = 1; t < max_lag; t++) {
-        autocov[t] /= (n_points - t);
-        if (autocov[t] <= 0) { // Gets too noisy, so stop here
-            break;
-        }
-
-        tau_int += 2.0 * autocov[t] / var;
-    }
-
-    double error = std::sqrt(var * tau_int / n_points);
-
+    double error = compute_corellated_error(autocov,var, n_points); 
     return {mean, error};
 }
