@@ -166,7 +166,7 @@ Result integrate_MC_ndim(
   
   double var = m2 / (n_points - 1);
  
-  double error = compute_corellated_error(autocov,var, n_points); 
+  double error = compute_correlated_error(autocov,var, n_points); 
   return {mean, error};
 }
 
@@ -266,7 +266,7 @@ Result integrate_MC_highdim(
     
     double var = m2 / (n_points - 1);
    
-    double error = compute_corellated_error(autocov,var, n_points); 
+    double error = compute_correlated_error(autocov,var, n_points); 
     return {mean, error};
 }
 
@@ -310,6 +310,6 @@ Result integrate_MC_dist(
 
     double var = m2 / (n_points - 1);
 
-    double error = compute_corellated_error(autocov,var, n_points); 
+    double error = compute_correlated_error(autocov,var, n_points); 
     return {mean, error};
 }
