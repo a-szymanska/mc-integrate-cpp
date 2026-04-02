@@ -160,7 +160,7 @@ Result integrate_MC_ndim(
       int pos = (buffer_head - t + max_lag) % max_lag; 
       autocov[t] += y_mean * buffer[buffer_head];
     }
-    buffer[buffer_head] = y;
+    buffer[buffer_head] = y_mean;
     buffer_head = (buffer_head + 1) % max_lag;
   }
   
@@ -260,7 +260,7 @@ Result integrate_MC_highdim(
         int pos = (buffer_head - t + max_lag) % max_lag; 
         autocov[t] += y_mean * buffer[buffer_head];
       }
-      buffer[buffer_head] = y;
+      buffer[buffer_head] = y_mean;
       buffer_head = (buffer_head + 1) % max_lag;
     }
     
@@ -304,7 +304,7 @@ Result integrate_MC_dist(
           int pos = (buffer_head - t + max_lag) % max_lag; 
           autocov[t] += y_mean * buffer[buffer_head];
         }
-        buffer[buffer_head] = y;
+        buffer[buffer_head] = y_mean;
         buffer_head = (buffer_head + 1) % max_lag;
     }
 
