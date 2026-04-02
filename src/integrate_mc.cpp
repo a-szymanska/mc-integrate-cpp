@@ -297,34 +297,41 @@ Result integrate_MC_dist(
     double mean = 0;
     double m2 = 0;
 
+    int max_lag = std::min(1000, n_points / 2); 
+    int buffer_head = 0;
+    std::vector<double> buffer(max_lag, 0.0);
+    std::vector<double> autocov(max_lag, 0.0);
+
     for (int i = 1; i <= n_points; i++) {
         double x = sampler();
         double y = f(x) / pdf(x);
 
-        f_values.push_back(y);
 
         double old_mean = mean;
         mean += (y - mean) / i;
         m2 += (y - old_mean) * (y - mean);
+
+        int y_mean = y- mean;
+        for(int t=1; t<std::min(max_lag, i); t++){
+          int pos = (buffer_head - t + max_lag) % max_lag; 
+          autocov[t] += y_mean * buffer[buffer_head];
+        }
+        buffer[buffer_head] = y;
+        buffer_head = (buffer_head + 1) % max_lag;
     }
 
     double var = m2 / (n_points - 1);
 
     // Computing autocorrelation time
-    int max_lag = std::min(1000, n_points / 2);
     double tau_int = 1.0;
 
     for (int t = 1; t < max_lag; t++) {
-        double autocov = 0.0;
-        for (int i = 0; i < n_points - t; i++) {
-            autocov += (f_values[i] - mean) * (f_values[i + t] - mean);
-        }
-        autocov /= (n_points - t);
-        if (autocov <= 0) { // Gets too noisy, so stop here
+        autocov[t] /= (n_points - t);
+        if (autocov[t] <= 0) { // Gets too noisy, so stop here
             break;
         }
 
-        tau_int += 2.0 * autocov / var;
+        tau_int += 2.0 * autocov[t] / var;
     }
 
     double error = std::sqrt(var * tau_int / n_points);
