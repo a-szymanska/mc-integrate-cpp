@@ -121,7 +121,7 @@ Result integrate_MC_ndim(
       for(int k =0; k<n_dims; k++){
         input[k]= lower[k] + bin_sizes[k] * (areas[i][k] + dist(mt));
       }
-      double y = abs(f(input));
+      double y = fabs(f(input));
       area_dist[i]+=y;
     }
     burn_in_sum+=area_dist[i];
@@ -225,7 +225,7 @@ Result integrate_MC_highdim(
           }
           input[i] = lower[i] + bin_sizes[i] * (j + dist(mt));
 
-          double y = abs(f(input));
+          double y = fabs(f(input));
           bin_distributions[i][j]+=y;
         }
         burn_in_sum+=bin_distributions[i][j];
