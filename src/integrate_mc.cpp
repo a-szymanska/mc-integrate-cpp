@@ -58,7 +58,7 @@ double u;
         }
 
         for (auto& bin: bins) {
-            double contribution = fabs(bin.cur_integral / int_sum);
+            double contribution = std::fabs(bin.cur_integral / int_sum);
             bin.points = std::max(2, int(n_points * contribution)); // Ensure at least 2 points per bin
         }
         result_sum += int_sum;
@@ -114,7 +114,7 @@ Result integrate_MC_ndim(
       for(int k =0; k<n_dims; k++){
         input[k]= lower[k] + bin_sizes[k] * (areas[i][k] + dist(mt));
       }
-      double y = abs(f(input));
+      double y = std::fabs(f(input));
       area_dist[i]+=y;
     }
     burn_in_sum+=area_dist[i];
@@ -191,7 +191,7 @@ Result integrate_MC_highdim(
           }
           input[i] = lower[i] + bin_sizes[i] * (j + dist(mt));
 
-          double y = abs(f(input));
+          double y = std::fabs(f(input));
           bin_distributions[i][j]+=y;
         }
         burn_in_sum+=bin_distributions[i][j];
