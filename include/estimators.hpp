@@ -1,3 +1,8 @@
+/*
+Estimators are given as a template argument to the integration methods.
+They extract logic of calculating the errors and correlations of the samples. 
+*/
+
 #pragma once
 
 #include <vector>
@@ -42,7 +47,10 @@ class EstimatorNoAutocorrelations : public Estimator{
   }
 };
 
-
+/*
+  Estimator simple aggregates all the samples and computes the error at the very end.
+  In theory it is the most precise, but it comes with high memory cost.
+*/
 class EstimatorSimple : public Estimator{
   double m2 = 0;
   int i=1;
