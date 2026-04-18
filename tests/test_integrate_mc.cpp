@@ -4,12 +4,13 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
-
+#include <iostream>
 void test_integrate_MC()
 {
     auto f = [](double x) { return x; };
 
     Result r = integrate_MC(0.0, 1.0, f, 1000, 10, 5);
+    std::cout<<"result "<<r.value<<" "<<r.error<<std::endl;
     assert(approx_equal(r.value, 0.5, r.error));
 }
 

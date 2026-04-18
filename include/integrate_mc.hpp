@@ -61,3 +61,5 @@ Result integrate_MC_dist(
     const std::function<double(double)> &f,
     const std::function<double(double)> &pdf,
     int n_points);
+
+#include "../src/integrate_mc.cpp"

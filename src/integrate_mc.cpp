@@ -2,11 +2,9 @@
 Implementation of the Monte Carlo methods with Vegas optimization.
 */
 
+#pragma once
 #include "../include/integrate_mc.hpp"
 #include "../include/sample_mcmc.hpp"
-#include "../include/estimators.hpp"
-
-#include <cinttypes>
 #include <random>
 #include <cmath>
 #include <ctime>
@@ -29,7 +27,8 @@ double u;
     std::vector<Box> bins(n_bins);
     
     double bin_size = (upper-lower) / n_bins;
-    
+    double range = bin_size * bin_size;
+
     std::mt19937 mt(time(nullptr));
     std::uniform_real_distribution<double> dist(0, bin_size);
     
@@ -46,24 +45,16 @@ double u;
         double int_sum = 0;
 
         for (auto& bin: bins) {
-            double sum = 0;
-            double mean = 0;
-            double m2 = 0;
+            EstimatorNoAutocorrelations estimator(bin.points);
             
-            int points = bin.points;
-            for (int k = 1; k <= points; k++) {
+            for (int k = 1; k <= bin.points; k++) {
                 double x = dist(mt) + bin.l;
                 double y = f(x);
-                sum += y;
-
-                // Welford's variance
-                double old_mean = mean;
-                mean += (y - mean) / k;
-                m2 += (y - old_mean) * (y - mean);
+                estimator.add_sample(y);
             }
-            bin.cur_integral = bin_size * sum / points;
+            bin.cur_integral = bin_size * estimator.get_mean();
             int_sum += bin.cur_integral;
-            error_sum += bin_size * bin_size * m2 / (points * (points-1));
+            error_sum += range * estimator.get_variance() / bin.points;
         }
 
         for (auto& bin: bins) {
@@ -147,7 +138,7 @@ Result integrate_MC_ndim(
     estimator.add_sample(y);
   }
   
-  return {estimator.mean, estimator.get_error()};
+  return {estimator.get_mean(), estimator.get_error()};
 }
 
 
@@ -227,7 +218,7 @@ Result integrate_MC_highdim(
       estimator.add_sample(y);
     }
     
-    return {estimator.mean, estimator.get_error()};
+    return {estimator.get_mean(), estimator.get_error()};
 }
 
 template <typename Estimator>
@@ -248,5 +239,5 @@ Result integrate_MC_dist(
         estimator.add_sample(y);
     }
 
-    return {estimator.mean, estimator.get_error()};
+    return {estimator.get_mean(), estimator.get_error()};
 }

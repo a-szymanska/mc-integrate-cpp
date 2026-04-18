@@ -13,7 +13,7 @@ endif()
 find_package(OpenMP)
 
 # Source code
-add_library(integrate src/integrate_mc.cpp src/integrate_mc_omp.cpp src/integrate_quadrature.cpp)
+add_library(integrate src/integrate_mc_omp.cpp src/integrate_quadrature.cpp)
 target_include_directories(integrate PUBLIC include)
 add_library(sample INTERFACE)
 target_include_directories(sample INTERFACE include)

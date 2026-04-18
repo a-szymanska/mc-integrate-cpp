@@ -5,11 +5,15 @@
 class Estimator{
   protected:
     int n_points;
+    double mean = 0;
   public:
-  double mean = 0;
   Estimator(int new_n_points): n_points(new_n_points) {}
   virtual void add_sample(double y) = 0;
+  virtual double get_variance() const = 0;
   virtual double get_error() const = 0;
+  double get_mean(){
+    return mean;
+  }
 };
 
 
@@ -17,6 +21,8 @@ class EstimatorNoAutocorrelations : public Estimator{
   double m2 = 0;
   int i=1;
   public:
+  EstimatorNoAutocorrelations(int new_n_points)
+      : Estimator(new_n_points){};
 
   // Welford's variance
   void add_sample(double y) override{
@@ -27,8 +33,12 @@ class EstimatorNoAutocorrelations : public Estimator{
   }
 
 
-  double get_error() const override{
+  double get_variance() const override{
     return m2 / (n_points-1);
+  }
+
+  double get_error() const override{
+    return std::sqrt(get_variance() / n_points);
   }
 };
 
@@ -55,7 +65,7 @@ class EstimatorSimple : public Estimator{
   }
 
 
-  double get_error() const override{
+  double get_variance() const override{
     double var = m2 / (n_points - 1);
 
     // Computing autocorrelation time
@@ -75,6 +85,10 @@ class EstimatorSimple : public Estimator{
         tau_int += 2.0 * autocov / var;
     }
 
-    return std::sqrt(var * tau_int / n_points);
+    return var * tau_int;
+  }
+
+  double get_error() const override{
+    return std::sqrt(get_variance() / n_points);
   }
 };
