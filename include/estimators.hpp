@@ -6,6 +6,7 @@ They extract logic of calculating the errors and correlations of the samples.
 #pragma once
 
 #include <vector>
+#include <cmath>
 
 class Estimator{
   protected:
