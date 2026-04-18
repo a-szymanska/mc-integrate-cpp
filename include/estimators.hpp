@@ -15,8 +15,8 @@ class Estimator{
   public:
   Estimator(int new_n_points): n_points(new_n_points) {}
   virtual void add_sample(double y) = 0;
-  virtual double get_variance() const = 0;
-  virtual double get_error() const = 0;
+  virtual double get_variance() = 0;
+  virtual double get_error() = 0;
   double get_mean(){
     return mean;
   }
@@ -39,12 +39,12 @@ class EstimatorNoAutocorrelations : public Estimator{
   }
 
 
-  double get_variance() const override{
-    return m2 / (n_points-1);
+  double get_variance() override{
+    return m2 / (i-2);
   }
 
-  double get_error() const override{
-    return std::sqrt(get_variance() / n_points);
+  double get_error() override{
+    return std::sqrt(get_variance() / (i-1));
   }
 };
 
@@ -74,7 +74,7 @@ class EstimatorSimple : public Estimator{
   }
 
 
-  double get_variance() const override{
+  double get_variance() override{
     double var = m2 / (n_points - 1);
 
     // Computing autocorrelation time
@@ -97,7 +97,51 @@ class EstimatorSimple : public Estimator{
     return var * tau_int;
   }
 
-  double get_error() const override{
+  double get_error() override{
     return std::sqrt(get_variance() / n_points);
+  }
+};
+
+//TODO: fixed batch size is temporary, we will want to estimate t-lag
+constexpr int batch_size = 100;
+class EstimatorNOBM : public Estimator{
+  int i = 1;
+  int batch_i=0;
+  double batch_sum = 0.0;
+  EstimatorNoAutocorrelations estimator;
+
+  void flush() {
+      if (batch_i != 0) {
+          estimator.add_sample(batch_sum / batch_i);
+          batch_i = 0;
+          batch_sum = 0.0;
+      }
+  }
+
+  public:
+  EstimatorNOBM(int new_n_points) : Estimator(new_n_points), estimator(n_points / batch_size){}
+ 
+  void add_sample(double y) override{
+      mean += (y - mean) / i;
+      i += 1;
+
+      batch_sum+=y;
+      batch_i+=1;
+
+      if (batch_i == batch_size) {
+          estimator.add_sample(batch_sum / batch_size);
+          batch_sum = 0.0;
+          batch_i = 0;
+      }
+  }
+
+  double get_variance() override{
+    flush();
+    return estimator.get_variance();
+  }
+
+  double get_error() override{
+    flush();
+    return estimator.get_error();
   }
 };
