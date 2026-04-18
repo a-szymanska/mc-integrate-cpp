@@ -12,6 +12,15 @@ endif()
 
 find_package(OpenMP)
 
+# External dependencies
+set(GNUPLOT_HEADER_DIR ${CMAKE_BINARY_DIR}/external)
+file(MAKE_DIRECTORY ${GNUPLOT_HEADER_DIR})
+
+file(DOWNLOAD
+    https://raw.githubusercontent.com/dstahlke/gnuplot-iostream/master/gnuplot-iostream.h
+    ${GNUPLOT_HEADER_DIR}/gnuplot-iostream.h
+)
+
 # Source code
 add_library(integrate src/integrate_mc.cpp src/integrate_mc_omp.cpp src/integrate_quadrature.cpp)
 target_include_directories(integrate PUBLIC include)
@@ -41,3 +50,6 @@ target_link_libraries(test_sample sample)
 add_test(NAME test_integrate_mc COMMAND test_integrate_mc)
 add_test(NAME test_integrate_quadrature COMMAND test_integrate_quadrature)
 add_test(NAME test_sample COMMAND test_sample)
+
+# Subdirectories
+add_subdirectory(examples)

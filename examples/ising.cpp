@@ -1,7 +1,9 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+
 #include "../include/sample_mcmc.hpp"
+#include "../build/exter"
 
 class IsingModel
 {
@@ -43,7 +45,22 @@ public:
     }
 
     void plot() {
-        std::cout << "Draw not implemented yet.\n";
+        Gnuplot gp;
+        
+        int n_energies = energies.size();
+        std::vector<std::pair<int, double>> data;
+        data.reserve(energies.size());
+
+        for (int i = 0; i < n_energies; i++) {
+            data.emplace_back(i, energies[i]);
+        }
+
+        gp << "set title 'Energy vs Number of iterations'\n";
+        gp << "set xlabel 'Number of iterations'\n";
+        gp << "set ylabel 'Energy'\n";
+        gp << "plot '-'";
+
+        gp.send1d(data);
     }
 
 private:

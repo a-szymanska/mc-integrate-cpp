@@ -192,7 +192,7 @@ public:
         const std::vector<std::vector<T>> &initial_state);
 
     std::vector<std::vector<T>> get_state() const {
-        return S;
+        return state;
     }
 
     McmcSystemChange<T> operator()() {
@@ -267,10 +267,9 @@ McmcSystemChange<T> McmcSystemSampler<T>::sample()
     int y = dist_y(mt);
     int next_idx = dist_idx(mt);
 
-    double delta_energy = get_energy_change(S, x, y, values[next_idx]);
+    double delta_energy = get_energy_change(state, x, y, values[next_idx]);
     double p_accept = std::min(1.0, delta_energy);
-    if (dist_prob(mt) <= p_accept)
-    {
+    if (dist_prob(mt) <= p_accept) {
         state[x][y] = values[next_idx];
     }
 
