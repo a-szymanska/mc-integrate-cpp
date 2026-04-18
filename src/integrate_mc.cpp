@@ -4,6 +4,7 @@ Implementation of the Monte Carlo methods with Vegas optimization.
 
 #include "../include/integrate_mc.hpp"
 #include "../include/sample_mcmc.hpp"
+#include "../include/estimators.hpp"
 
 #include <cinttypes>
 #include <random>
@@ -74,6 +75,7 @@ double u;
     return {result_sum / n_iterations, sqrt(error_sum) / n_iterations};
 }
 
+template <typename Estimator>
 Result integrate_MC_ndim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
@@ -133,11 +135,7 @@ Result integrate_MC_ndim(
   }
 
   //use the estimated distribution to calculate the integral
-  std::vector<double> f_values;
-  f_values.reserve(n_points);
-  double mean = 0;
-  double m2 = 0;
-
+  Estimator estimator(n_points);
   McmcSampler area_sampler(areas_indices, area_dist);
 
   for(int i=1; i<= n_points; i++){
@@ -146,37 +144,14 @@ Result integrate_MC_ndim(
       input[j]= lower[j] + bin_sizes[j] * (areas[area][j] + dist(mt));
     }
     double y = f(input)*range/area_dist[area]; 
-    f_values.push_back(y);
-
-    double old_mean = mean;
-    mean += (y - mean) / i;
-    m2 += (y - old_mean) * (y - mean);
+    estimator.add_sample(y);
   }
   
-  double var = m2 / (n_points - 1);
- 
-  // Computing autocorrelation time
-  int max_lag = std::min(1000, n_points / 2);
-  double tau_int = 1.0;
-
-  for (int t = 1; t < max_lag; t++) {
-      double autocov = 0.0;
-      for (int i = 0; i < n_points - t; i++) {
-          autocov += (f_values[i] - mean) * (f_values[i + t] - mean);
-      }
-      autocov /= (n_points - t);
-      if (autocov <= 0) { // Gets too noisy, so stop here
-          break;
-      }
-
-      tau_int += 2.0 * autocov / var;
-  }
-
-  double error = std::sqrt(var * tau_int / n_points);
-
-  return {mean, error};
+  return {estimator.mean, estimator.get_error()};
 }
 
+
+template <typename Estimator>
 Result integrate_MC_highdim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
@@ -238,10 +213,7 @@ Result integrate_MC_highdim(
     }
 
     //use the estimated distribution to calculate the integral
-    std::vector<double> f_values;
-    f_values.reserve(n_points);
-    double mean = 0;
-    double m2 = 0;
+    Estimator estimator(n_points);
 
     for(int i=1; i<= n_points; i++){
       double pdf = 1.0;
@@ -252,36 +224,13 @@ Result integrate_MC_highdim(
       }
 
       double y = f(input)*range/pdf; 
-      f_values.push_back(y);
-
-      double old_mean = mean;
-      mean += (y - mean) / i;
-      m2 += (y - old_mean) * (y - mean);
+      estimator.add_sample(y);
     }
     
-    double var = m2 / (n_points - 1);
-   
-    // Computing autocorrelation time
-    int max_lag = std::min(1000, n_points / 2);
-    double tau_int = 1.0;
-
-    for (int t = 1; t < max_lag; t++) {
-        double autocov = 0.0;
-        for (int i = 0; i < n_points - t; i++) {
-            autocov += (f_values[i] - mean) * (f_values[i + t] - mean);
-        }
-        autocov /= (n_points - t);
-        if (autocov <= 0) { // Gets too noisy, so stop here
-            break;
-        }
-
-        tau_int += 2.0 * autocov / var;
-    }
-
-    double error = std::sqrt(var * tau_int / n_points);
-    return {mean, error};
+    return {estimator.mean, estimator.get_error()};
 }
 
+template <typename Estimator>
 Result integrate_MC_dist(
     double lower,
     double upper,
@@ -290,44 +239,14 @@ Result integrate_MC_dist(
     int n_points)
 {
     McmcSampler<> sampler(lower, upper, pdf);
-
-    std::vector<double> f_values;
-    f_values.reserve(n_points);
-
-    double mean = 0;
-    double m2 = 0;
+    Estimator estimator(n_points);
 
     for (int i = 1; i <= n_points; i++) {
         double x = sampler();
         double y = f(x) / pdf(x);
 
-        f_values.push_back(y);
-
-        double old_mean = mean;
-        mean += (y - mean) / i;
-        m2 += (y - old_mean) * (y - mean);
+        estimator.add_sample(y);
     }
 
-    double var = m2 / (n_points - 1);
-
-    // Computing autocorrelation time
-    int max_lag = std::min(1000, n_points / 2);
-    double tau_int = 1.0;
-
-    for (int t = 1; t < max_lag; t++) {
-        double autocov = 0.0;
-        for (int i = 0; i < n_points - t; i++) {
-            autocov += (f_values[i] - mean) * (f_values[i + t] - mean);
-        }
-        autocov /= (n_points - t);
-        if (autocov <= 0) { // Gets too noisy, so stop here
-            break;
-        }
-
-        tau_int += 2.0 * autocov / var;
-    }
-
-    double error = std::sqrt(var * tau_int / n_points);
-
-    return {mean, error};
+    return {estimator.mean, estimator.get_error()};
 }
