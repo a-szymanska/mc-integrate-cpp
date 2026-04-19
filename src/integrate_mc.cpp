@@ -10,6 +10,17 @@ Implementation of the Monte Carlo methods with Vegas optimization.
 #include <ctime>
 #include <vector>
 
+void allocate_bins(std::vector<int>& bin_points, std::vector<double>& bin_contributions, double total_contribution, int n_points){
+  int used_points = 0;
+  for(int i=0; i<bin_points.size(); i++){
+    int points = bin_contributions[i] / total_contribution;
+    bin_points[i] = 2+ points;
+    used_points += points; 
+  }
+
+  // TODO: randomly allocate the leftovers
+}
+
 Result integrate_MC(
     double lower,
     double upper,
@@ -19,24 +30,34 @@ Result integrate_MC(
     int n_iterations)
 {
     struct Box {
-        long points;
         double l;
 double u;
         double cur_integral;
    };
     std::vector<Box> bins(n_bins);
-    
+    std::vector<int> bin_points(n_bins); 
+
     double bin_size = (upper-lower) / n_bins;
     double range = bin_size * bin_size;
-
     std::mt19937 mt(time(nullptr));
     std::uniform_real_distribution<double> dist(0, bin_size);
     
+    std::vector<double> bin_contributions(n_bins,1.0);
+    double total_contribution = n_bins;
+
+    //every bin will have at minimm two points, we allocate the rest by contribution
+    n_points -= 2 * n_bins;
+    if(n_points < 0){
+      throw "not enough points";
+    }
+
     double l = lower;
     for (int i = 0; i < n_bins; i++, l += bin_size) {
         double u = std::min(upper, l + bin_size);
-        bins[i] = {n_points / n_bins, l, u};
+        bins[i] = {l, u};
     }
+
+    allocate_bins(bin_points, bin_contributions, total_contribution, n_points);
 
     double error_sum = 0; 
     double result_sum = 0;
@@ -44,23 +65,27 @@ double u;
     for (int i = 0; i < n_iterations; i++) {
         double int_sum = 0;
 
-        for (auto& bin: bins) {
-            EstimatorNoAutocorrelations estimator(bin.points);
+        for (int j = 0; j < bins.size(); j++) {
+            int points = bin_points[j];
+            EstimatorNoAutocorrelations estimator(points);
             
-            for (int k = 1; k <= bin.points; k++) {
-                double x = dist(mt) + bin.l;
+            for (int k = 1; k <= points; k++) {
+                double x = dist(mt) + bins[j].l;
                 double y = f(x);
                 estimator.add_sample(y);
             }
-            bin.cur_integral = bin_size * estimator.get_mean();
-            int_sum += bin.cur_integral;
-            error_sum += range * estimator.get_variance() / bin.points;
+            bins[j].cur_integral = bin_size * estimator.get_mean();
+            int_sum += bins[j].cur_integral;
+            error_sum += range * estimator.get_variance() / points;
         }
+        
+        total_contribution = 0.0;
+        for (int j = 0; j < bins.size(); j++) {
+            bin_contributions[j] =  std::fabs(bins[j].cur_integral / int_sum);
+            total_contribution += bin_contributions[j];
+        }
+        allocate_bins(bin_points, bin_contributions, total_contribution, n_points);
 
-        for (auto& bin: bins) {
-            double contribution = std::fabs(bin.cur_integral / int_sum);
-            bin.points = std::max(2, int(n_points * contribution)); // Ensure at least 2 points per bin
-        }
         result_sum += int_sum;
     }
     return {result_sum / n_iterations, sqrt(error_sum) / n_iterations};
