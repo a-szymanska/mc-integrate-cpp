@@ -26,14 +26,16 @@ To configure the project and compile tests run:
 ./build.sh
 ```
 
-### Usage
+### Explore
+
+See the `tests/` directory for example usage of all the functions.
+
+For more in-depth applications (including simulations and simple models with basic visualisation), check the `examples/` directory.
+
+### Use
 
 To bundle the library into a single header:
 ```bash
 ./amalgamate.sh
 ```
 To use the library in your own project download the generated all-in-one header in `mc_integrate_cpp.hpp`.
-
-### Examples
-
-See the `tests/` directory for example usage of all the integration functions.
