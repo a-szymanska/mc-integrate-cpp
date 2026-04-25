@@ -3,7 +3,9 @@
 #include <cmath>
 
 #include "../include/sample_mcmc.hpp"
-#include "../build/exter"
+#ifdef USE_GNUPLOT
+    #include "../build/external/gnuplot-iostream.h"
+#endif
 
 class IsingModel
 {
@@ -45,6 +47,7 @@ public:
     }
 
     void plot() {
+    #ifdef USE_GNUPLOT
         Gnuplot gp;
         
         int n_energies = energies.size();
@@ -61,6 +64,9 @@ public:
         gp << "plot '-'";
 
         gp.send1d(data);
+    #else
+        std::cout << "Plotting disabled (rebuild the project with gnuplot to enable)." << std::endl;
+    #endif
     }
 
 private:

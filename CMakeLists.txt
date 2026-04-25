@@ -13,13 +13,15 @@ endif()
 find_package(OpenMP)
 
 # External dependencies
-set(GNUPLOT_HEADER_DIR ${CMAKE_BINARY_DIR}/external)
-file(MAKE_DIRECTORY ${GNUPLOT_HEADER_DIR})
+if(USE_GNUPLOT)
+    set(GNUPLOT_HEADER_DIR ${CMAKE_BINARY_DIR}/external)
+    file(MAKE_DIRECTORY ${GNUPLOT_HEADER_DIR})
 
-file(DOWNLOAD
-    https://raw.githubusercontent.com/dstahlke/gnuplot-iostream/master/gnuplot-iostream.h
-    ${GNUPLOT_HEADER_DIR}/gnuplot-iostream.h
-)
+    file(DOWNLOAD
+        https://raw.githubusercontent.com/dstahlke/gnuplot-iostream/master/gnuplot-iostream.h
+        ${GNUPLOT_HEADER_DIR}/gnuplot-iostream.h
+    )
+endif()
 
 # Source code
 add_library(integrate src/integrate_mc.cpp src/integrate_mc_omp.cpp src/integrate_quadrature.cpp)
