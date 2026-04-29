@@ -14,7 +14,7 @@ else
 fi
 
 echo "Configuring project..."
-cmake -B $BUILD_DIR -DUSE_GNUPLOT=$USE_GNUPLOT
+cmake -B $BUILD_DIR -DUSE_GNUPLOT=$USE_GNUPLOT -Wno-dev
 
 echo "Building..."
 cmake --build $BUILD_DIR

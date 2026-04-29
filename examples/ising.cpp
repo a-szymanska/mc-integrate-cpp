@@ -2,7 +2,7 @@
 #include <vector>
 #include <cmath>
 
-#include "../include/sample_mcmc.hpp"
+#include "../include/sample_mcmc_system.hpp"
 #ifdef USE_GNUPLOT
     #include "../build/external/gnuplot-iostream.h"
 #endif
