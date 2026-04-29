@@ -18,6 +18,10 @@ foreach(src ${EXAMPLE_SOURCES})
         Boost::iostreams
     )
 
+    if(USE_GNUPLOT)
+        target_compile_definitions(${name} PRIVATE USE_GNUPLOT)
+    endif()
+
     set_target_properties(${name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build
     )
