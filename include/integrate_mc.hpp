@@ -6,10 +6,9 @@ with Vegas optimization and Welford's algorithm for error estimation.
 #pragma once
 
 #include "common.hpp"
-
+#include "estimators.hpp"
 #include <vector>
 #include <functional>
-
 
 /*
 The total number of sampled points is equal to n_points * n_iterations.
@@ -32,6 +31,7 @@ Result integrate_MC(
 
 // ----- Monte Carlo integration (N-dimensional) -----
 
+template <typename Estimator = EstimatorSimple>
 Result integrate_MC_ndim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
@@ -43,6 +43,7 @@ Result integrate_MC_ndim(
 
 // ----- Monte Carlo integration (N-dimensional) optimised for high dimension count -----
 
+template <typename Estimator = EstimatorSimple>
 Result integrate_MC_highdim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
@@ -53,9 +54,12 @@ Result integrate_MC_highdim(
 
 // ------ Monte Carlo with custom distribution ------
 
+template <typename Estimator = EstimatorSimple>
 Result integrate_MC_dist(
     double lower,
     double upper,
     const std::function<double(double)> &f,
     const std::function<double(double)> &pdf,
     int n_points);
+
+#include "../src/integrate_mc.cpp"

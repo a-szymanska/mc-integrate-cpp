@@ -26,7 +26,7 @@ void test_integrate_MC_ndim()
         return res;
     };
 
-    Result r = integrate_MC_ndim(lower, upper, f, 10, 20, 100000);
+    Result r = integrate_MC_ndim<EstimatorSimple>(lower, upper, f, 10, 20, 100000);
     assert(approx_equal(r.value, 32, r.error));
 }
 
@@ -43,7 +43,7 @@ void test_integrate_MC_highdim()
         return res;
     };
 
-    Result r = integrate_MC_highdim(lower, upper, f, 20, 200, 100000);
+    Result r = integrate_MC_highdim<EstimatorSimple>(lower, upper, f, 20, 200, 100000);
     assert(approx_equal(r.value, pow(2.0,20.0), r.error));
 }
 
@@ -52,7 +52,7 @@ void test_integrate_MC_dist()
     auto f = [](double x) { return std::sin(x); };
     auto p = [](double x) { return 8 * x / (M_PI * M_PI); }; // Linear PDF normalized over [0, pi/2]
 
-    Result r = integrate_MC_dist(0.0, M_PI/2, f, p, 10000);
+    Result r = integrate_MC_dist<EstimatorSimple>(0.0, M_PI/2, f, p, 10000);
     assert(approx_equal(r.value, 1.0, r.error));
 }
 
