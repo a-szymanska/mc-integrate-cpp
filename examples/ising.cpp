@@ -26,9 +26,7 @@ public:
             initial_state)
     {}
 
-    void simulate(double temp, int n_iterations, int sample_every = 100) {
-        beta = 1.0 / std::max(temp, 1e-2);
-
+    void simulate(double beta, int n_iterations, int sample_every = 100) {
         energies = {0.0};
 
         std::cout << "Initial state:\n";
@@ -62,7 +60,7 @@ public:
         gp << "set title 'Energy vs Number of iterations'\n";
         gp << "set xlabel 'Number of iterations'\n";
         gp << "set ylabel 'Energy'\n";
-        gp << "plot '-'";
+        gp << "plot '-'\n";
 
         gp.send1d(data);
     #else
@@ -76,7 +74,7 @@ private:
     std::vector<double> energies;
     McmcSystemSampler<int> sampler;
 
-    double get_energy_change(const std::vector<std::vector<int>> &S, int x, int y, int new_value) {
+    int get_energy_change(const std::vector<std::vector<int>> &S, int x, int y, int new_value) {
         int n_rows = S.size();
         int n_cols = S[0].size();
 
@@ -99,7 +97,7 @@ private:
             cur_E -= cur_value * S[x][y + 1];
             new_E -= new_value * S[x][y + 1];
         }
-        return std::exp(-beta * (new_E - cur_E));
+        return new_E - cur_E;
     }
 
     void print_state() const {
@@ -127,8 +125,8 @@ int main() {
         {1, 1, 1, 1, -1}
     };
 
-    IsingModel model(6, 5, initial_state);
-    model.simulate(260.0, 10e5);
+    IsingModel model(6, 5, initial_state); // n_rows = 6, n_cols = 5
+    model.simulate(0.05, 10e5);            // beta = 0.05, n_iterations = 10^5
     model.plot();
 
     return 0;

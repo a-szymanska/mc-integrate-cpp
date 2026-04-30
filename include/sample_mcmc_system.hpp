@@ -41,6 +41,7 @@ public:
     McmcSystemSampler(
         int n_rows, int n_cols, const std::vector<T> &values,
         std::function<double(const std::vector<std::vector<T>> &, int, int, T)>);
+
     /*
     Starts from the provided initial state with no burn-in. Useful for radom simulation of a system.
     */
@@ -48,6 +49,10 @@ public:
         int n_rows, int n_cols, const std::vector<T> &values,
         std::function<double(const std::vector<std::vector<T>> &, int, int, T)>,
         const std::vector<std::vector<T>> &initial_state);
+
+    void set_beta(double beta) {
+        this->beta = beta;
+    }
 
     std::vector<std::vector<T>> get_state() const {
         return state;
@@ -72,6 +77,7 @@ private:
 
     const std::vector<T> values;
     std::vector<std::vector<int>> state; // State of the system
+    double beta = 0.05; // Inverse temperature
 
     McmcSystemChange<T> sample();
 };
@@ -126,9 +132,11 @@ McmcSystemChange<T> McmcSystemSampler<T>::sample()
     int next_idx = dist_idx(mt);
 
     double delta_energy = get_energy_change(state, x, y, values[next_idx]);
-    double p_accept = std::min(1.0, delta_energy);
+    double p_accept = std::min(1.0, std::exp(-beta * delta_energy));
     if (dist_prob(mt) <= p_accept) {
         state[x][y] = values[next_idx];
+    } else {
+        delta_energy = 0.0;
     }
 
     return {delta_energy, x, y, state[x][y]};
