@@ -25,6 +25,7 @@ To configure the project and compile tests run:
 ```bash
 ./build.sh
 ```
+You can enable gnuplot for visualisation by passing the `--gnuplot` flag.
 
 ### Explore
 

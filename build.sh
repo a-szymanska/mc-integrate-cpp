@@ -3,14 +3,25 @@
 set -e
 
 BUILD_DIR=build
+USE_GNUPLOT=""
 
-read -p "Download and enable gnuplot? (y/n) [y]: " answer
-answer=${answer:-y}
+# Check for --gnuplot flag
+for arg in "$@"; do
+    if [[ "$arg" == "--gnuplot" ]]; then
+        USE_GNUPLOT=ON
+    fi
+done
 
-if [[ "$answer" =~ ^[Yy]$ ]]; then
-    USE_GNUPLOT=ON
-else
-    USE_GNUPLOT=OFF
+# If no flag, ask the user
+if [[ -z "$USE_GNUPLOT" ]]; then
+    read -p "Download and enable gnuplot? (y/n) [y]: " answer
+    answer=${answer:-y}
+
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
+        USE_GNUPLOT=ON
+    else
+        USE_GNUPLOT=OFF
+    fi
 fi
 
 echo "Configuring project..."
