@@ -9,18 +9,21 @@ The multidimensional sampling algorithms for importance Monte Carlo methods.
 #include <functional>
 #include "sample_mcmc.hpp"
 
-template <>
-class McmcSampler<std::vector<double>>{
+template <typename U>
+class McmcSampler<std::vector<U>>{
   public:
   
+    template <typename S = U, typename = std::enable_if_t<std::is_same<S, double>::value>>
     McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs);
+
+    template <typename S = U, typename = std::enable_if_t<std::is_same<S, double>::value>>
     McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs, std::vector<double> init_value, int n_iterations_init = kNumIterationsInit);
 
 
-    McmcSampler(std::vector<std::vector<double>> &values, std::vector<std::vector<double>> &probs);
-    McmcSampler(std::vector<std::vector<double>> &values, std::vector<std::vector<double>> &probs, std::vector<int> init_idx, int n_iterations_init = kNumIterationsInit);
+    McmcSampler(std::vector<std::vector<U>> &values, std::vector<std::vector<double>> &probs);
+    McmcSampler(std::vector<std::vector<U>> &values, std::vector<std::vector<double>> &probs, std::vector<int> init_idx, int n_iterations_init = kNumIterationsInit);
 
-    std::vector<double> operator()()
+    std::vector<U> operator()()
     {
         return (this->*sample)();
     }
@@ -30,15 +33,16 @@ private:
     static std::mt19937 mt;
     std::uniform_real_distribution<double> dist_prob;
 
-    using sample_fn = const std::vector<double>&(McmcSampler<std::vector<double>>::*)();
+    using sample_fn = const std::vector<U>&(McmcSampler<std::vector<double>>::*)();
     sample_fn sample;
+
+    std::vector<U> cur_value;
 
     // ----------- Continuous case -----------
 
     std::optional<std::reference_wrapper<std::vector<double>>> lower;
     std::optional<std::reference_wrapper<std::vector<double>>> upper;
     std::vector<std::function<double(double)>> pdfs;
-    std::vector<double> cur_value;
 
     
     std::uniform_real_distribution<double> dist_continuous;
@@ -49,18 +53,20 @@ private:
 
     // ----------- Discrete case -----------
 
-    std::optional<std::reference_wrapper<std::vector<std::vector<double>>>> values;
+    std::optional<std::reference_wrapper<std::vector<std::vector<U>>>> values;
     std::optional<std::reference_wrapper<std::vector<std::vector<double>>>> probs;
     std::uniform_int_distribution<int> dist_discrete;
     std::vector<int> cur_idx;
-    const std::vector<double>& sample_discrete();
+    const std::vector<U>& sample_discrete();
     int sample_discrete_coordinate(int dim);
     std::vector<int> sample_discrete_init();
 };
 
-inline std::mt19937 McmcSampler<std::vector<double>>::mt{std::random_device{}()};
 
+template <typename U>
+inline std::mt19937 McmcSampler<std::vector<U>>::mt{std::random_device{}()};
 
+template <>
 std::vector<double> McmcSampler<std::vector<double>>::sample_continous_init(){
   std::vector<double> res(n_dim, 0);
   for(int i = 0; i<n_dim; i++){
@@ -69,12 +75,15 @@ std::vector<double> McmcSampler<std::vector<double>>::sample_continous_init(){
   return res;
 }
 
-inline double McmcSampler<std::vector<double>>::sample_continous_coordinate(int dim)
+template <typename U>
+inline double McmcSampler<std::vector<U>>::sample_continous_coordinate(int dim)
 {
   return lower->get()[dim] + (dist_continuous(mt) * (upper->get()[dim] - lower->get()[dim]));
 }
 
-const std::vector<double>& McmcSampler<std::vector<double>>::sample_continuous()
+
+template <typename U>
+const std::vector<double>& McmcSampler<std::vector<U>>::sample_continuous()
 {
     // we do a full sweep every time
     for(int i=0; i<n_dim; i++){
@@ -93,7 +102,10 @@ const std::vector<double>& McmcSampler<std::vector<double>>::sample_continuous()
     return cur_value;
 }
 
-McmcSampler<std::vector<double>>::McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs)
+
+template <typename U>
+template <typename S, typename>
+McmcSampler<std::vector<U>>::McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs)
   :  n_dim(lower.size()),
     lower(lower),
     upper(upper),
@@ -107,7 +119,9 @@ McmcSampler<std::vector<double>>::McmcSampler(std::vector<double>& lower, std::v
       }
     }
 
-McmcSampler<std::vector<double>>::McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs, std::vector<double> init_value, int n_iterations_init)
+template <typename U>
+template <typename S, typename>
+McmcSampler<std::vector<U>>::McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs, std::vector<double> init_value, int n_iterations_init)
   : n_dim(lower.size()),
     lower(lower),
     upper(upper),
@@ -121,7 +135,9 @@ McmcSampler<std::vector<double>>::McmcSampler(std::vector<double>& lower, std::v
       }
     }
 
-std::vector<int> McmcSampler<std::vector<double>>::sample_discrete_init(){
+
+template <typename U>
+std::vector<int> McmcSampler<std::vector<U>>::sample_discrete_init(){
   std::vector<int> res(n_dim, 0);
   for(int i = 0; i<n_dim; i++){
     res[i] = sample_discrete_coordinate(i);
@@ -129,12 +145,16 @@ std::vector<int> McmcSampler<std::vector<double>>::sample_discrete_init(){
   return res;
 }
 
-inline int McmcSampler<std::vector<double>>::sample_discrete_coordinate(int dim)
+
+template <typename U>
+inline int McmcSampler<std::vector<U>>::sample_discrete_coordinate(int dim)
 {
   return dist_discrete(mt) % static_cast<int>(values->get()[dim].size());
 }
 
-const std::vector<double>& McmcSampler<std::vector<double>>::sample_discrete()
+
+template <typename U>
+const std::vector<U>& McmcSampler<std::vector<U>>::sample_discrete()
 {
     // we do a full sweep every time
     for(int i=0; i<n_dim; i++){
@@ -150,7 +170,9 @@ const std::vector<double>& McmcSampler<std::vector<double>>::sample_discrete()
     return cur_value;
 }
 
-McmcSampler<std::vector<double>>::McmcSampler(std::vector<std::vector<double>> &values, std::vector<std::vector<double>> &probs)
+
+template <typename U>
+McmcSampler<std::vector<U>>::McmcSampler(std::vector<std::vector<U>> &values, std::vector<std::vector<double>> &probs)
   : n_dim(probs.size()),
     values(values),
     probs(probs),
@@ -169,7 +191,9 @@ McmcSampler<std::vector<double>>::McmcSampler(std::vector<std::vector<double>> &
   }
 }
 
-McmcSampler<std::vector<double>>::McmcSampler(std::vector<std::vector<double>> &values, std::vector<std::vector<double>> &probs, std::vector<int> init_idx, int n_iterations_init)
+
+template <typename U>
+McmcSampler<std::vector<U>>::McmcSampler(std::vector<std::vector<U>> &values, std::vector<std::vector<double>> &probs, std::vector<int> init_idx, int n_iterations_init)
   : n_dim(probs.size()),
     values(values),
     probs(probs),
