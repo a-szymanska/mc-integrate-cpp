@@ -48,11 +48,11 @@ void test_sample_discrete()
 void test_sample_ndim_continuous()
 {
     auto pdf = [](double x) { return 3.0 / 4.0 * (1 - x * x); };
-    std::function<double(double)> pdf_fn = pdf;
+    std::vector<std::function<double(double)>> pdfs = {pdf, pdf};
 
     std::vector<double> lower = {-1.0, -1.0};
     std::vector<double> upper = { 1.0,  1.0};
-    McmcSampler<std::vector<double>> sampler(lower, upper, pdf_fn);
+    McmcSampler<std::vector<double>> sampler(lower, upper, pdfs);
 
     int n_samples = 1000;
     std::vector<double> sum(2, 0.0);

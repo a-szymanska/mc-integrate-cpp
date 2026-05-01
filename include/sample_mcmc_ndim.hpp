@@ -13,8 +13,8 @@ template <>
 class McmcSampler<std::vector<double>>{
   public:
   
-    McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::function<double(double)>& pdf);
-    McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::function<double(double)>& pdf, std::vector<double> init_value, int n_iterations_init = kNumIterationsInit);
+    McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs);
+    McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs, std::vector<double> init_value, int n_iterations_init = kNumIterationsInit);
 
 
     McmcSampler(std::vector<std::vector<double>> &values, std::vector<std::vector<double>> &probs);
@@ -37,7 +37,7 @@ private:
 
     std::optional<std::reference_wrapper<std::vector<double>>> lower;
     std::optional<std::reference_wrapper<std::vector<double>>> upper;
-    std::function<double(double)> pdf;
+    std::vector<std::function<double(double)>> pdfs;
     std::vector<double> cur_value;
 
     
@@ -81,9 +81,9 @@ const std::vector<double>& McmcSampler<std::vector<double>>::sample_continuous()
       double next_value = sample_continous_coordinate(i);
 
       double p_accept = 1.0; // Accept any move from zero-probability state
-      double pdf_cur = pdf(cur_value[i]);
+      double pdf_cur = pdfs[i](cur_value[i]);
       if (pdf_cur > 0.0) {
-          p_accept = std::min(1.0, pdf(next_value) / pdf_cur);
+          p_accept = std::min(1.0, pdfs[i](next_value) / pdf_cur);
       }
       if (dist_prob(mt) <= p_accept) {
          cur_value[i] = next_value;
@@ -93,11 +93,11 @@ const std::vector<double>& McmcSampler<std::vector<double>>::sample_continuous()
     return cur_value;
 }
 
-McmcSampler<std::vector<double>>::McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::function<double(double)>& pdf)
+McmcSampler<std::vector<double>>::McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs)
   :  n_dim(lower.size()),
     lower(lower),
     upper(upper),
-    pdf(pdf),
+    pdfs(pdfs),
     dist_continuous(0.0, 1.0),
     sample(&McmcSampler::sample_continuous),
     cur_value(sample_continous_init())
@@ -107,11 +107,11 @@ McmcSampler<std::vector<double>>::McmcSampler(std::vector<double>& lower, std::v
       }
     }
 
-McmcSampler<std::vector<double>>::McmcSampler(std::vector<double>& lower, std::vector<double>& upper  ,std::function<double(double)>& pdf, std::vector<double> init_value, int n_iterations_init)
+McmcSampler<std::vector<double>>::McmcSampler(std::vector<double>& lower, std::vector<double>& upper, std::vector<std::function<double(double)>>& pdfs, std::vector<double> init_value, int n_iterations_init)
   : n_dim(lower.size()),
     lower(lower),
     upper(upper),
-    pdf(pdf),
+    pdfs(pdfs),
     dist_continuous(0.0, 1.0),
     cur_value(init_value),
     sample(&McmcSampler::sample_continuous)
