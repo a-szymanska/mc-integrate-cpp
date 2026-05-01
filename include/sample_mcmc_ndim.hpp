@@ -23,7 +23,7 @@ class McmcSampler<std::vector<U>>{
     McmcSampler(std::vector<std::vector<U>> &values, std::vector<std::vector<double>> &probs);
     McmcSampler(std::vector<std::vector<U>> &values, std::vector<std::vector<double>> &probs, std::vector<int> init_idx, int n_iterations_init = kNumIterationsInit);
 
-    std::vector<U> operator()()
+    const std::vector<U>& operator()()
     {
         return (this->*sample)();
     }
@@ -33,7 +33,7 @@ private:
     static std::mt19937 mt;
     std::uniform_real_distribution<double> dist_prob;
 
-    using sample_fn = const std::vector<U>&(McmcSampler<std::vector<double>>::*)();
+    using sample_fn = const std::vector<U>&(McmcSampler<std::vector<U>>::*)();
     sample_fn sample;
 
     std::vector<U> cur_value;
@@ -178,7 +178,7 @@ McmcSampler<std::vector<U>>::McmcSampler(std::vector<std::vector<U>> &values, st
     probs(probs),
     dist_discrete(),
     dist_prob(0.0, 1.0),
-    sample(&McmcSampler<std::vector<double>>::sample_discrete),
+    sample(&McmcSampler<std::vector<U>>::sample_discrete),
     cur_idx(sample_discrete_init())
 {
   cur_value.resize(n_dim);
