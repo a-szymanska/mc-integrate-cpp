@@ -1,5 +1,6 @@
 #include "../include/sample_mcmc.hpp"
 #include "../include/sample_mcmc_ndim.hpp"
+#include "../include/sample_bin.hpp"
 #include "./utils.hpp"
 
 #include <cassert>
@@ -84,10 +85,55 @@ void test_sample_ndim_discrete()
     assert(relative_equal(sum[1] / n_samples, 23.0));
 }
 
+void test_bin_sampler()
+{
+    std::vector<std::vector<double>> probs = {
+        {0.1, 0.2, 0.3, 0.4},
+        {0.25, 0.25, 0.25, 0.25}
+    };
+    std::vector<double> lower = {0.0, 0.0};
+    std::vector<double> upper = {4.0, 2.0};
+
+    BinSampler sampler(probs, lower, upper);
+
+    int n_samples = 1000;
+    std::vector<double> sum(2, 0.0);
+    for (int i = 0; i < n_samples; i++) {
+        auto s  = sampler();
+        sum[0] += s[0];
+        sum[1] += s[1];
+    }
+
+    assert(relative_equal(sum[0] / n_samples, 2.5));
+    assert(relative_equal(sum[1] / n_samples, 1.0));
+}
+
+void test_bin_sampler_burn_in()
+{
+    auto f = [](const std::vector<double>&) { return 1.0; };
+    std::vector<double> lower = {0.0, 0.0};
+    std::vector<double> upper = {4.0, 4.0};
+
+    BinSampler sampler(f, 4, lower, upper, 200);
+
+    int n_samples = 1000;
+    std::vector<double> sum(2, 0.0);
+    for (int i = 0; i < n_samples; i++) {
+        auto s  = sampler();
+        sum[0] += s[0];
+        sum[1] += s[1];
+    }
+
+    assert(relative_equal(sum[0] / n_samples, 2.0));
+    assert(relative_equal(sum[1] / n_samples, 2.0));
+}
+
 int main()
 {
     test_sample_continuous();
     test_sample_discrete();
     test_sample_ndim_continuous();
     test_sample_discrete();
+    test_bin_sampler();
+    test_bin_sampler_burn_in();
 }
