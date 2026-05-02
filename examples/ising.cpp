@@ -13,17 +13,17 @@ class IsingModel
 public:
     IsingModel(int n_rows, int n_cols)
         : sampler(n_rows, n_cols, std::vector<int>{-1, 1},
-            [this](const std::vector<std::vector<int>> &state, int x, int y, int new_value) {
-                return this->get_energy_change(state, x, y, new_value);
+            [this](const std::vector<std::vector<int>> &state, int x, int y) {
+                return this->get_energy_contrib(state, x, y);
             })
     {}
 
-    IsingModel(int n_rows, int n_cols, std::vector<std::vector<int>> initial_state)
+    IsingModel(int n_rows, int n_cols, std::vector<std::vector<int>> init_state)
     : sampler(n_rows, n_cols, std::vector<int>{-1, 1},
-            [this](const std::vector<std::vector<int>> &state, int x, int y, int new_value) {
-                return this->get_energy_change(state, x, y, new_value);
+            [this](const std::vector<std::vector<int>> &state, int x, int y) {
+                return this->get_energy_contrib(state, x, y);
             },
-            initial_state)
+            init_state)
     {}
 
     void simulate(double beta, int n_iterations, int sample_every = 100) {
@@ -31,11 +31,12 @@ public:
 
         std::cout << "Initial state:\n";
         print_state();
+    
         for (int i = 0; i < n_iterations; i++) {
-            auto res = sampler();
+            auto delta_energy = sampler();
 
             if (i % sample_every == 0) {
-                energies.push_back(energies.back() + res.delta_energy);
+                energies.push_back(energies.back() + delta_energy);
             }
         }
 
@@ -74,36 +75,25 @@ private:
     std::vector<double> energies;
     McmcSystemSampler<int> sampler;
 
-    int get_energy_change(const std::vector<std::vector<int>> &S, int x, int y, int new_value) {
-        int n_rows = S.size();
-        int n_cols = S[0].size();
+    int get_energy_contrib(const std::vector<std::vector<int>> &state, int x, int y) {
+        int n_rows = state.size();
+        int n_cols = state[0].size();
 
-        int cur_value = S[x][y];
-        double cur_E = 0.0, new_E = 0.0;
+        int energy = 0;
+        int cur_value = state[x][y];
 
-        if (x > 0) {
-            cur_E -= cur_value * S[x - 1][y];
-            new_E -= new_value * S[x - 1][y];
-        }
-        if (x < n_rows - 1) {
-            cur_E -= cur_value * S[x + 1][y];
-            new_E -= new_value * S[x + 1][y];
-        }
-        if (y > 0) {
-            cur_E -= cur_value * S[x][y - 1];
-            new_E -= new_value * S[x][y - 1];
-        }
-        if (y < n_cols - 1) {
-            cur_E -= cur_value * S[x][y + 1];
-            new_E -= new_value * S[x][y + 1];
-        }
-        return new_E - cur_E;
+        energy -= cur_value * state[(x - 1 + n_rows) % n_rows][y];
+        energy -= cur_value * state[(x + 1) % n_rows][y];
+        energy -= cur_value * state[x][(y - 1 + n_cols) % n_cols];
+        energy -= cur_value * state[x][(y + 1) % n_cols];
+
+        return energy;
     }
 
     void print_state() const {
-        const auto & S = sampler.get_state();
+        const auto & state = sampler.get_state();
 
-        for (const auto &row : S) {
+        for (const auto &row : state) {
             for (int val : row) {
                 std::cout << (val == 1 ? "+ " : "- ");
             }
@@ -116,7 +106,7 @@ private:
 
 int main() {
 
-    std::vector<std::vector<int>> initial_state = {
+    std::vector<std::vector<int>> init_state = {
         {1, 1, 1, 1, 1},
         {1, 1, -1, 1, 1},
         {1, -1, 1, 1, 1},
@@ -125,8 +115,8 @@ int main() {
         {1, 1, 1, 1, -1}
     };
 
-    IsingModel model(6, 5, initial_state); // n_rows = 6, n_cols = 5
-    model.simulate(0.05, 10e5);            // beta = 0.05, n_iterations = 10^5
+    IsingModel model(6, 5, init_state); // n_rows = 6, n_cols = 5
+    model.simulate(0.05, 10e5);         // beta = 0.05, n_iterations = 10^5
     model.plot();
 
     return 0;
