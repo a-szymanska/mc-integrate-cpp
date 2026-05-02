@@ -5,15 +5,15 @@
 #include <cmath>
 #include <vector>
 
-void test_integrate_MC()
+void test_integrate_mc()
 {
     auto f = [](double x) { return x; };
 
-    Result r = integrate_MC(0.0, 1.0, f, 1000, 10, 5);
+    Result r = integrate_mc(0.0, 1.0, f, 1000, 10, 5);
     assert(approx_equal(r.value, 0.5, r.error));
 }
 
-void test_integrate_MC_ndim()
+void test_integrate_mc_ndim()
 {
     std::vector<double> lower(5, 0);
     std::vector<double> upper(5, M_PI);
@@ -26,11 +26,11 @@ void test_integrate_MC_ndim()
         return res;
     };
 
-    Result r = integrate_MC_ndim<EstimatorSimple>(lower, upper, f, 10, 20, 100000);
+    Result r = integrate_mc_ndim<EstimatorSimple>(lower, upper, f, 10, 20, 100000);
     assert(approx_equal(r.value, 32, r.error));
 }
 
-void test_integrate_MC_highdim()
+void test_integrate_mc_highdim()
 {
     std::vector<double> lower(20, 0);
     std::vector<double> upper(20, M_PI);
@@ -43,23 +43,23 @@ void test_integrate_MC_highdim()
         return res;
     };
 
-    Result r = integrate_MC_highdim<EstimatorSimple>(lower, upper, f, 20, 200, 100000);
+    Result r = integrate_mc_highdim<EstimatorSimple>(lower, upper, f, 20, 200, 100000);
     assert(approx_equal(r.value, pow(2.0,20.0), r.error));
 }
 
-void test_integrate_MC_dist()
+void test_integrate_mc_dist()
 {
     auto f = [](double x) { return std::sin(x); };
     auto p = [](double x) { return 8 * x / (M_PI * M_PI); }; // Linear PDF normalized over [0, pi/2]
 
-    Result r = integrate_MC_dist<EstimatorSimple>(0.0, M_PI/2, f, p, 10000);
+    Result r = integrate_mc_dist<EstimatorSimple>(0.0, M_PI/2, f, p, 10000);
     assert(approx_equal(r.value, 1.0, r.error));
 }
 
 int main()
 {
-    test_integrate_MC();
-    // test_integrate_MC_ndim();
-    // test_integrate_MC_highdim();
-    test_integrate_MC_dist();
+    test_integrate_mc();
+    // test_integrate_mc_ndim();
+    // test_integrate_mc_highdim();
+    // test_integrate_mc_dist();
 }

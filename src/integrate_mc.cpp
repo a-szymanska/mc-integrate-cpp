@@ -22,7 +22,7 @@ void allocate_bins(std::vector<int> &bin_points, std::vector<double> &bin_contri
     // TODO: randomly allocate the leftovers
 }
 
-Result integrate_MC(
+Result integrate_mc(
     double lower,
     double upper,
     const std::function<double(double)> &f,
@@ -94,7 +94,7 @@ Result integrate_MC(
 }
 
 template <typename Estimator>
-Result integrate_MC_ndim(
+Result integrate_mc_ndim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
     const std::function<double(const std::vector<double> &)> &f,
@@ -168,7 +168,7 @@ Result integrate_MC_ndim(
 }
 
 template <typename Estimator>
-Result integrate_MC_highdim(
+Result integrate_mc_highdim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
     const std::function<double(const std::vector<double> &)> &f,
@@ -247,7 +247,7 @@ Result integrate_MC_highdim(
 }
 
 template <typename Estimator>
-Result integrate_MC_dist(
+Result integrate_mc_dist(
     double lower,
     double upper,
     const std::function<double(double)> &f,

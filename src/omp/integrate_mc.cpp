@@ -5,7 +5,7 @@
 #include <ctime>
 #include <omp.h>
 
-Result integrate_MC_omp(
+Result integrate_mc(
     double lower,
     double upper,
     const std::function<double(double)> &f,
@@ -70,26 +70,37 @@ Result integrate_MC_omp(
     return {result_sum / n_iterations, sqrt(error_sum) / n_iterations};
 }
 
-Result integrate_MC_ndim_omp(
+template <typename Estimator>
+Result integrate_mc_ndim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
     const std::function<double(const std::vector<double> &)> &f,
+    int n_bins,
+    int burn_in_size,
     int n_points)
 {
-    // TODO
-    return {0.0, 0.0};
+    return {0, 0};
 }
 
-Result integrate_MC_dist_omp(
+template <typename Estimator>
+Result integrate_mc_highdim(
+    const std::vector<double> &lower,
+    const std::vector<double> &upper,
+    const std::function<double(const std::vector<double> &)> &f,
+    int n_bins,
+    int burn_in_size,
+    int n_points)
+{
+    return {0, 0};
+}
+
+template <typename Estimator>
+Result integrate_mc_dist(
     double lower,
     double upper,
     const std::function<double(double)> &f,
-    const std::function<double(double)> &p,
-    int n_points,
-    int n_boxes,
-    int n_iterations)
+    const std::function<double(double)> &pdf,
+    int n_points)
 {
-    // TODO
-    return {0.0, 0.0};
+    return {0, 0};
 }
-

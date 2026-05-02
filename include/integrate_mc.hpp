@@ -62,4 +62,8 @@ Result integrate_MC_dist(
     const std::function<double(double)> &pdf,
     int n_points);
 
+#ifdef USE_OMP
+#include "../src/omp/integrate_mc.cpp"
+#else
 #include "../src/integrate_mc.cpp"
+#endif
