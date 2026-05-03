@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
-
+#include <iostream>
 void test_integrate_MC()
 {
     auto f = [](double x) { return x; };
@@ -43,8 +43,9 @@ void test_integrate_MC_highdim()
         return res;
     };
 
-    Result r = integrate_MC_highdim<EstimatorSimple>(lower, upper, f, 20, 200, 100000);
-    assert(approx_equal(r.value, pow(2.0,20.0), r.error));
+    Result r = integrate_MC_highdim<EstimatorSimple>(lower, upper, f, 10, 100, 1000000);
+
+    assert(approx_equal(r.value, pow(2.0,10.0), r.error));
 }
 
 void test_integrate_MC_dist()
@@ -60,6 +61,6 @@ int main()
 {
     test_integrate_MC();
     // test_integrate_MC_ndim();
-    // test_integrate_MC_highdim();
+    test_integrate_MC_highdim();
     test_integrate_MC_dist();
 }

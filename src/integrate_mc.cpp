@@ -5,6 +5,7 @@ Implementation of the Monte Carlo methods with Vegas optimization.
 #pragma once
 #include "../include/integrate_mc.hpp"
 #include "../include/sample_mcmc.hpp"
+#include "sample_bin.hpp"
 #include <random>
 #include <cmath>
 #include <ctime>
@@ -176,70 +177,14 @@ Result integrate_MC_highdim(
     int burn_in_size,
     int n_points)
 {
-    int n_dim = lower.size();
-    std::mt19937 mt(time(nullptr));
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
-    std::uniform_int_distribution<int> bin_dist(0, n_bins - 1);
-
-    std::vector<std::vector<double>> bin_distributions;
-    std::vector<McmcSampler<int>> bin_samplers;
-
-    std::vector<double> bin_sizes(n_dim);
-
-    std::vector<int> sampler_values(n_bins);
-    for (int i = 0; i < n_bins; i++) {
-        sampler_values[i] = i;
-    }
-
-    for (int i = 0; i < n_dim; i++) {
-        bin_distributions.emplace_back(n_bins, 0.0);
-    }
-
-    double range = 1.0;
-
-    for (int i = 0; i < n_dim; i++) {
-        bin_samplers.emplace_back(sampler_values, bin_distributions[i]);
-        bin_sizes[i] = (upper[i] - lower[i]) / n_bins;
-        range *= (upper[i] - lower[i]);
-    }
-    range /= std::pow(n_bins, n_dim);
-
-    std::vector<double> input(n_dim);
-
-    // Estimate the distribution
-    for (int i = 0; i < n_dim; i++) {
-        double burn_in_sum = 0.0;
-        for (int j = 0; j < n_bins; j++) {
-            for (int k = 0; k < burn_in_size; k++) {
-                for (int l = 0; l < n_dim; l++) {
-                    input[l] = lower[l] + bin_sizes[l] * n_bins * dist(mt);
-                }
-                input[i] = lower[i] + bin_sizes[i] * (j + dist(mt));
-
-                double y = std::fabs(f(input));
-                bin_distributions[i][j] += y;
-            }
-            burn_in_sum += bin_distributions[i][j];
-        }
-
-        // Normalise the distribution
-        for (int j = 0; j < n_bins; j++) {
-            bin_distributions[i][j] /= burn_in_sum;
-        }
-    }
-
-    // Use the estimated distribution to calculate the integral
+    BinSampler sampler(f, n_bins, lower, upper, burn_in_size);
     Estimator estimator(n_points);
 
     for (int i = 1; i <= n_points; i++) {
-        double pdf = 1.0;
-        for (int j = 0; j < n_dim; j++) {
-            int bin = bin_samplers[j]();
-            input[j] = lower[j] + bin_sizes[j] * (bin + dist(mt));
-            pdf *= bin_distributions[j][bin];
-        }
+        auto point = sampler();
+        double pdf = sampler.pdf();
+        double y = f(point) / pdf;
 
-        double y = f(input) * range / pdf;
         estimator.add_sample(y);
     }
 

@@ -28,6 +28,9 @@ class McmcSampler<std::vector<U>>{
         return (this->*sample)();
     }
 
+    double pdf();
+
+
 private:
     int n_dim;
     static std::mt19937 mt;
@@ -36,7 +39,6 @@ private:
     using sample_fn = const std::vector<U>&(McmcSampler<std::vector<U>>::*)();
     sample_fn sample;
 
-    std::vector<U> cur_value;
 
     // ----------- Continuous case -----------
 
@@ -57,9 +59,13 @@ private:
     std::optional<std::reference_wrapper<std::vector<std::vector<double>>>> probs;
     std::uniform_int_distribution<int> dist_discrete;
     std::vector<int> cur_idx;
+    double cur_pdf;
     const std::vector<U>& sample_discrete();
     int sample_discrete_coordinate(int dim);
     std::vector<int> sample_discrete_init();
+
+
+    std::vector<U> cur_value;
 };
 
 
@@ -128,6 +134,7 @@ McmcSampler<std::vector<U>>::McmcSampler(std::vector<double>& lower, std::vector
     pdfs(pdfs),
     dist_continuous(0.0, 1.0),
     cur_value(init_value),
+    cur_pdf(1.0),
     sample(&McmcSampler::sample_continuous)
     {
       for (int i = 0; i < n_iterations_init; i++) {
@@ -156,6 +163,7 @@ inline int McmcSampler<std::vector<U>>::sample_discrete_coordinate(int dim)
 template <typename U>
 const std::vector<U>& McmcSampler<std::vector<U>>::sample_discrete()
 {
+    cur_pdf = 1.0;
     // we do a full sweep every time
     for(int i=0; i<n_dim; i++){
       int next_idx = sample_discrete_coordinate(i);        
@@ -165,7 +173,7 @@ const std::vector<U>& McmcSampler<std::vector<U>>::sample_discrete()
          cur_idx[i] = next_idx;
          cur_value[i] = values->get()[i][next_idx];
       }
-
+      cur_pdf*=probs->get()[i][cur_idx[i]];
     }
     return cur_value;
 }
@@ -179,6 +187,7 @@ McmcSampler<std::vector<U>>::McmcSampler(std::vector<std::vector<U>> &values, st
     dist_discrete(),
     dist_prob(0.0, 1.0),
     sample(&McmcSampler<std::vector<U>>::sample_discrete),
+    cur_pdf(1.0),
     cur_idx(sample_discrete_init())
 {
   cur_value.resize(n_dim);
@@ -199,7 +208,8 @@ McmcSampler<std::vector<U>>::McmcSampler(std::vector<std::vector<U>> &values, st
     probs(probs),
     dist_discrete(),
     dist_prob(0.0, 1.0),
-    sample(&McmcSampler<std::vector<double>>::sample_discrete),
+    sample(&McmcSampler<std::vector<U>>::sample_discrete),
+    cur_pdf(1.0),
     cur_idx(init_idx)
 {
   cur_value.resize(n_dim);
@@ -211,5 +221,10 @@ McmcSampler<std::vector<U>>::McmcSampler(std::vector<std::vector<U>> &values, st
     sample_discrete();
   }
 }
-    
 
+
+template <typename U>
+inline double McmcSampler<std::vector<U>>::pdf()
+{
+  return cur_pdf;
+}
