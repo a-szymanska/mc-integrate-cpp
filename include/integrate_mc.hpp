@@ -7,6 +7,7 @@ with Vegas optimization and Welford's algorithm for error estimation.
 
 #include "common.hpp"
 #include "estimators.hpp"
+#include "sample_bin.hpp"
 #include <vector>
 #include <functional>
 
@@ -32,25 +33,27 @@ Result integrate_MC(
 // ----- Monte Carlo integration (N-dimensional) -----
 
 template <typename Estimator = EstimatorSimple>
-Result integrate_MC_ndim(
+Result integrate_MC_area(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
     const std::function<double(const std::vector<double> &)> &f,
+    int n_points,
     int n_bins,
-    int burn_in_size,
-    int n_points);
+    int burn_in_size
+    );
 
 
 // ----- Monte Carlo integration (N-dimensional) optimised for high dimension count -----
 
-template <typename Estimator = EstimatorSimple>
-Result integrate_MC_highdim(
+template <typename Estimator = EstimatorSimple, typename Sampler = BinSampler>
+Result integrate_MC_ndim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
     const std::function<double(const std::vector<double> &)> &f,
+    int n_points,
     int n_bins,
-    int burn_in_size,
-    int n_points);
+    int burn_in_size
+   );
 
 // ------ Monte Carlo with custom distribution ------
 

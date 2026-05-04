@@ -26,7 +26,7 @@ void test_integrate_MC_ndim()
         return res;
     };
 
-    Result r = integrate_MC_ndim<EstimatorSimple>(lower, upper, f, 10, 20, 100000);
+    Result r = integrate_MC_area<EstimatorSimple>(lower, upper, f, 10000, 2, 100);
     assert(approx_equal(r.value, 32, r.error));
 }
 
@@ -43,7 +43,7 @@ void test_integrate_MC_highdim()
         return res;
     };
 
-    Result r = integrate_MC_highdim<EstimatorSimple>(lower, upper, f, 10, 100, 1000000);
+    Result r = integrate_MC_ndim<EstimatorSimple>(lower, upper, f, 100000, 10, 100);
 
     assert(approx_equal(r.value, pow(2.0,10.0), r.error));
 }
@@ -60,7 +60,7 @@ void test_integrate_MC_dist()
 int main()
 {
     test_integrate_MC();
-    // test_integrate_MC_ndim();
-    test_integrate_MC_highdim();
+    test_integrate_MC_ndim();
+    // test_integrate_MC_highdim();
     test_integrate_MC_dist();
 }

@@ -95,13 +95,14 @@ Result integrate_MC(
 }
 
 template <typename Estimator>
-Result integrate_MC_ndim(
+Result integrate_MC_area(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
     const std::function<double(const std::vector<double> &)> &f,
+    int n_points,
     int n_bins,
-    int burn_in_size,
-    int n_points)
+    int burn_in_size
+    )
 {
     int n_dims = lower.size();
     int n_areas = std::pow(n_bins, n_dims);
@@ -168,14 +169,15 @@ Result integrate_MC_ndim(
     return {estimator.get_mean(), estimator.get_error()};
 }
 
-template <typename Estimator>
-Result integrate_MC_highdim(
+template <typename Estimator, typename Sampler>
+Result integrate_MC_ndim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,
     const std::function<double(const std::vector<double> &)> &f,
+    int n_points,
     int n_bins,
-    int burn_in_size,
-    int n_points)
+    int burn_in_size
+    )
 {
     BinSampler sampler(f, n_bins, lower, upper, burn_in_size);
     Estimator estimator(n_points);
@@ -190,6 +192,8 @@ Result integrate_MC_highdim(
 
     return {estimator.get_mean(), estimator.get_error()};
 }
+
+
 
 template <typename Estimator>
 Result integrate_MC_dist(
