@@ -1,5 +1,5 @@
 /*
-The sampling algorithms for importance Monte Carlo methods.
+The one dimensional sampling algorithms for importance Monte Carlo methods.
 */
 
 #pragma once
@@ -35,6 +35,7 @@ public:
         return (this->*sample)();
     }
 
+    double get_pdf();
     
 private:
     static std::mt19937 mt;
@@ -42,6 +43,7 @@ private:
 
     using sample_fn = T (McmcSampler<T>::*)();
     sample_fn sample;
+    double cur_pdf;
 
     // ----------- Continuous case -----------
 
@@ -95,6 +97,7 @@ McmcSampler<T>::McmcSampler(double lower, double upper, std::function<double(dou
         }
         if (dist_prob(mt) <= p_accept) {
             cur_value = next_value;
+            cur_pdf = pdf_cur;
         }
     }
 }
@@ -119,6 +122,7 @@ McmcSampler<T>::McmcSampler(std::vector<T> &values, std::vector<double> &probs, 
         double p_accept = std::min(1.0, probs[next_idx] / probs[cur_idx]);
         if (dist_prob(mt) <= p_accept) {
             cur_idx = next_idx;
+            cur_pdf = probs[cur_idx];
         }
     }
 }
@@ -151,4 +155,9 @@ T McmcSampler<T>::sample_discrete()
     }
 
     return values->get()[cur_idx];
+}
+
+template <typename T>
+double McmcSampler<T>::get_pdf(){
+  return cur_pdf;
 }

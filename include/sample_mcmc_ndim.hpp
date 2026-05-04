@@ -28,7 +28,7 @@ class McmcSampler<std::vector<U>>{
         return (this->*sample)();
     }
 
-    double pdf();
+    double get_pdf();
 
 
 private:
@@ -224,7 +224,7 @@ McmcSampler<std::vector<U>>::McmcSampler(std::vector<std::vector<U>> &values, st
 
 
 template <typename U>
-inline double McmcSampler<std::vector<U>>::pdf()
+inline double McmcSampler<std::vector<U>>::get_pdf()
 {
   return cur_pdf;
 }

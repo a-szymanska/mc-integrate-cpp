@@ -7,7 +7,7 @@ with Vegas optimization and Welford's algorithm for error estimation.
 
 #include "common.hpp"
 #include "estimators.hpp"
-#include "sample_bin.hpp"
+#include "sample_area.hpp"
 #include <vector>
 #include <functional>
 
@@ -45,7 +45,7 @@ Result integrate_MC_area(
 
 // ----- Monte Carlo integration (N-dimensional) optimised for high dimension count -----
 
-template <typename Estimator = EstimatorSimple, typename Sampler = BinSampler>
+template <typename Estimator = EstimatorSimple, typename Sampler = AreaSampler>
 Result integrate_MC_ndim(
     const std::vector<double> &lower,
     const std::vector<double> &upper,

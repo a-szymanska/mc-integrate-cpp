@@ -19,7 +19,7 @@ class BinSampler{
     return sample();
   }
 
-  double pdf();
+  double get_pdf();
 
   private:
     int n_bins; 
@@ -145,6 +145,6 @@ std::vector<double>& BinSampler::sample(){
   return cur_value;
 }
 
-double BinSampler::pdf(){
-  return bin_sampler.pdf()/range;
+double BinSampler::get_pdf(){
+  return bin_sampler.get_pdf()/range;
 }

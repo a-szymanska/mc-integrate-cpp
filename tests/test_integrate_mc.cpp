@@ -1,5 +1,6 @@
 #include "../include/integrate_mc.hpp"
 #include "./utils.hpp"
+#include "sample_area.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -9,7 +10,8 @@ void test_integrate_MC()
 {
     auto f = [](double x) { return x; };
 
-    Result r = integrate_MC(0.0, 1.0, f, 1000, 10, 5);
+    Result r = integrate_MC(0.0, 1.0, f, 100000, 100, 20);
+    std::cout<<r.value<<" "<<r.error<<std::endl;
     assert(approx_equal(r.value, 0.5, r.error));
 }
 
@@ -26,14 +28,16 @@ void test_integrate_MC_ndim()
         return res;
     };
 
-    Result r = integrate_MC_area<EstimatorSimple>(lower, upper, f, 10000, 2, 100);
+    Result r = integrate_MC_ndim<EstimatorSimple, AreaSampler>(lower, upper, f, 100000, 4, 1000);
+
+    std::cout<<r.value<<" "<<r.error<<std::endl;
     assert(approx_equal(r.value, 32, r.error));
 }
 
 void test_integrate_MC_highdim()
 {
-    std::vector<double> lower(20, 0);
-    std::vector<double> upper(20, M_PI);
+    std::vector<double> lower(3, 0);
+    std::vector<double> upper(3, M_PI);
 
     auto f = [](const std::vector<double> &X) { 
         double res = 1;
@@ -42,10 +46,10 @@ void test_integrate_MC_highdim()
         }
         return res;
     };
+    Result r = integrate_MC_ndim<EstimatorSimple, BinSampler>(lower, upper, f, 100000, 10, 1000);
 
-    Result r = integrate_MC_ndim<EstimatorSimple>(lower, upper, f, 100000, 10, 100);
-
-    assert(approx_equal(r.value, pow(2.0,10.0), r.error));
+    std::cout<<r.value<<" "<<pow(2.0,3.0)<<" "<<r.error<<std::endl;
+    assert(approx_equal(r.value, pow(2.0,3.0), r.error));
 }
 
 void test_integrate_MC_dist()
@@ -53,7 +57,10 @@ void test_integrate_MC_dist()
     auto f = [](double x) { return std::sin(x); };
     auto p = [](double x) { return 8 * x / (M_PI * M_PI); }; // Linear PDF normalized over [0, pi/2]
 
-    Result r = integrate_MC_dist<EstimatorSimple>(0.0, M_PI/2, f, p, 10000);
+
+    Result r = integrate_MC_dist<EstimatorSimple>(0.0, M_PI/2, f, p, 100000);
+
+    std::cout<<r.value<<" "<<r.error<<std::endl;
     assert(approx_equal(r.value, 1.0, r.error));
 }
 
@@ -61,6 +68,6 @@ int main()
 {
     test_integrate_MC();
     test_integrate_MC_ndim();
-    // test_integrate_MC_highdim();
+    test_integrate_MC_highdim();
     test_integrate_MC_dist();
 }
